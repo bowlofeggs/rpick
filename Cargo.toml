@@ -1,0 +1,21 @@
+[package]
+name = "rpick"
+version = "0.0.0"
+authors = ["Randy Barlow <randy@electronsweatshop.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://gitlab.com/bowlofeggs/rpick"
+documentation = "https://docs.rs/rpick"
+description = """\
+              Helps you pick items from a list by various algorithms. Example uses: pick a
+              restaurant you haven't been to in a while, or an album to listen to."""
+keywords = ["random", "game"]
+categories = ["command-line-utilities", "games"]
+edition = "2018"
+
+[dependencies]
+dirs = "1.0"
+rand = "0.6"
+serde = {version = "1.0", features = ["derive"]}
+serde_yaml = "0.8"
+structopt = "0.2"
