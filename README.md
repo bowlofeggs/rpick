@@ -6,7 +6,7 @@ the list.
 
 An example use case for this is picking a restaurant. You might want to generally go to restaurants
 you haven't visited in a while, but you also might not want to use a strict least recently used
-model and spice things up with some element of chance, with restaurants you've lease recently
+model and spice things up with some element of chance, with restaurants you've least recently
 visited getting a boost in their chances.
 
 ```rpick``` keeps its lists in a [YAML](https://yaml.org/) file in your home config directory called
