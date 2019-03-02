@@ -51,7 +51,7 @@ for the ```restaurant``` object in ```rpick.yml``` to find out which model to us
 were available. This parameter is required, but its possible values are defined by you in your
 config file.
 
-Note that it added two settings that weren't there originally, ```model```, and
+It added two settings that weren't there originally, ```model```, and
 ```stddev_scaling_factor```.
 
 The ```model``` field in the config file defines which mathematical
