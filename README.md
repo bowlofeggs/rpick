@@ -16,7 +16,6 @@ there. To get started with our restaurant example, create ```~/.config/rpick.yml
 ```
 ---
 restaurant:
-  model: gaussian
   choices:
     - Spirits
     - Lucky 32
@@ -52,17 +51,20 @@ for the ```restaurant``` object in ```rpick.yml``` to find out which model to us
 were available. This parameter is required, but its possible values are defined by you in your
 config file.
 
-The ```model``` field in the config file is required, but at the time of writing only ```gaussian```
+Note that it added two settings that weren't there originally, ```model```, and
+```stddev_scaling_factor```.
+
+The ```model``` field in the config file defines which mathematical
+model to use to pick from the given choices, and at the time of writing only ```gaussian```
 is a valid model. There are tentative plans to add other models later in the future.
 
-Note that it added a setting that wasn't there originally, ```stddev_scaling_factor```. This setting
-is used to derive the standard deviation; the standard deviation is the length of the list of
-choices, divided by this scaling factor. Thus, a larger scaling factor will result in a stronger
-preference for items near the top of the list, and a smaller scaling factor will result in a more
-even distribution among the choices. Note that the smaller the scaling factor is, the longer rpick
-will take to make a decision, on average. The default is ```3.0```, which is chosen because it
-places the last item on the list at three standard deviations, giving it a 0.03% chance of being
-chosen.
+```stddev_scaling_factor``` is used to derive the standard deviation; the standard deviation is the
+length of the list of choices, divided by this scaling factor. Thus, a larger scaling factor will
+result in a stronger preference for items near the top of the list, and a smaller scaling factor
+will result in a more even distribution among the choices. Note that the smaller the scaling factor
+is, the longer rpick will take to make a decision, on average. The default is ```3.0```, which is
+chosen because it places the last item on the list at three standard deviations, giving it a 0.03%
+chance of being chosen.
 
 This project is available on [crates.io](https://crates.io/crates/rpick).
 
@@ -73,3 +75,5 @@ This project is available on [crates.io](https://crates.io/crates/rpick).
 
 * [#1](https://gitlab.com/bowlofeggs/rpick/merge_requests/1): Added a new
   ```stddev_scaling_factor``` setting, which is optional and defaults to ```3.0```.
+* [#2](https://gitlab.com/bowlofeggs/rpick/merge_requests/2): The model now defaults to "gaussian",
+  so users don't have to define it by hand.

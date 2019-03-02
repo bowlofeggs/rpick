@@ -45,6 +45,7 @@ enum CategoryType {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct ConfigCategory {
+    #[serde(default = "_default_model")]
     model: CategoryType,
     #[serde(default = "_default_stddev_scaling_factor")]
     stddev_scaling_factor: f64,
@@ -82,6 +83,12 @@ fn main() {
     config.get_mut(&args.category).expect("category not found").choices.push(value);
 
     _write_config(config);
+}
+
+
+/// Define the default for the model setting as Gaussian.
+fn _default_model() -> CategoryType {
+    return CategoryType::Gaussian;
 }
 
 
