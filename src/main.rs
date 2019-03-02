@@ -46,6 +46,8 @@ enum CategoryType {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct ConfigCategory {
     model: CategoryType,
+    #[serde(default = "_default_stddev_scaling_factor")]
+    stddev_scaling_factor: f64,
     choices: Vec<String>,
 }
 
@@ -53,7 +55,8 @@ struct ConfigCategory {
 fn main() {
     let args = Cli::from_args();
     let mut config = _read_config().unwrap();
-    let stddev = (config[&args.category].choices.len() as f64) / 3.0;
+    let stddev = (config[&args.category].choices.len() as f64) /
+        config[&args.category].stddev_scaling_factor;
     let normal = Normal::new(0.0, stddev);
     let mut accept = false;
     let mut index = 0;
@@ -79,6 +82,12 @@ fn main() {
     config.get_mut(&args.category).expect("category not found").choices.push(value);
 
     _write_config(config);
+}
+
+
+/// Define the default for the stddev_scaling_factor setting as 3.0.
+fn _default_stddev_scaling_factor() -> f64 {
+    return 3.0;
 }
 
 
