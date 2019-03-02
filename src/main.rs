@@ -36,10 +36,10 @@ struct Cli {
 }
 
 
-#[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 enum CategoryType {
-    gaussian,
+    #[serde(rename="gaussian")]
+    Gaussian,
 }
 
 
