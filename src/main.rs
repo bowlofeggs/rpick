@@ -54,33 +54,8 @@ fn main() {
     let category = config.get_mut(&args.category).expect("category not found");
     match category {
         ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
-            let stddev = (choices.len() as f64) / *stddev_scaling_factor;
-            let normal = Normal::new(0.0, stddev);
-            let mut accept = false;
-            let mut index = 0;
-
-            while !accept {
-                index = loop {
-                    let index = normal.sample(&mut rand::thread_rng()).abs() as usize;
-                    if index < choices.len() {
-                        break index;
-                    }
-                };
-
-                print!("Choice is {}. Accept? (Y/n) ", choices[index]);
-                io::stdout().flush().unwrap();
-                let stdin = io::stdin();
-                let line1 = stdin.lock().lines().next().unwrap().unwrap();
-                if ["", "y", "Y"].contains(&line1.as_str()) {
-                    accept = true;
-                }
-            }
-
-            let value = choices.remove(index);
-            choices.push(value);
-
+            _pick_gaussian(choices, *stddev_scaling_factor);
             _write_config(config);
-
         }
     }
 }
@@ -97,6 +72,36 @@ fn _get_config_file_path() -> String {
     let config_dir = dirs::config_dir().expect("Unable to find config dir.");
     let config_file = config_dir.join(CONFIG_FILE);
     return String::from(config_file.to_str().expect("Unable to determine config."));
+}
+
+
+/// Run the gaussian model for the given choices and standard deviation scaling factor. When the
+/// user accepts a choice, move that choice to end of the choices Vector and return.
+fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
+    let stddev = (choices.len() as f64) / stddev_scaling_factor;
+    let normal = Normal::new(0.0, stddev);
+    let mut accept = false;
+    let mut index = 0;
+
+    while !accept {
+        index = loop {
+            let index = normal.sample(&mut rand::thread_rng()).abs() as usize;
+            if index < choices.len() {
+                break index;
+            }
+        };
+
+        print!("Choice is {}. Accept? (Y/n) ", choices[index]);
+        io::stdout().flush().unwrap();
+        let stdin = io::stdin();
+        let line1 = stdin.lock().lines().next().unwrap().unwrap();
+        if ["", "y", "Y"].contains(&line1.as_str()) {
+            accept = true;
+        }
+    }
+
+    let value = choices.remove(index);
+    choices.push(value);
 }
 
 
