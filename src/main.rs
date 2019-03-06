@@ -37,59 +37,52 @@ struct Cli {
 
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-enum CategoryType {
-    #[serde(rename="gaussian")]
-    Gaussian,
-}
-
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ConfigCategory {
-    #[serde(default = "_default_model")]
-    model: CategoryType,
-    #[serde(default = "_default_stddev_scaling_factor")]
-    stddev_scaling_factor: f64,
-    choices: Vec<String>,
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "model")]
+enum ConfigCategory {
+    Gaussian {
+        #[serde(default = "_default_stddev_scaling_factor")]
+        stddev_scaling_factor: f64,
+        choices: Vec<String>},
 }
 
 
 fn main() {
     let args = Cli::from_args();
     let mut config = _read_config().unwrap();
-    let stddev = (config[&args.category].choices.len() as f64) /
-        config[&args.category].stddev_scaling_factor;
-    let normal = Normal::new(0.0, stddev);
-    let mut accept = false;
-    let mut index = 0;
+    let category = config.get_mut(&args.category).expect("category not found");
+    match category {
+        ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
+            let stddev = (choices.len() as f64) / *stddev_scaling_factor;
+            let normal = Normal::new(0.0, stddev);
+            let mut accept = false;
+            let mut index = 0;
 
-    while !accept {
-        index = loop {
-            let index = normal.sample(&mut rand::thread_rng()).abs() as usize;
-            if index < config[&args.category].choices.len() {
-                break index;
+            while !accept {
+                index = loop {
+                    let index = normal.sample(&mut rand::thread_rng()).abs() as usize;
+                    if index < choices.len() {
+                        break index;
+                    }
+                };
+
+                print!("Choice is {}. Accept? (Y/n) ", choices[index]);
+                io::stdout().flush().unwrap();
+                let stdin = io::stdin();
+                let line1 = stdin.lock().lines().next().unwrap().unwrap();
+                if ["", "y", "Y"].contains(&line1.as_str()) {
+                    accept = true;
+                }
             }
-        };
 
-        print!("Choice is {}. Accept? (Y/n) ", config[&args.category].choices[index]);
-        io::stdout().flush().unwrap();
-        let stdin = io::stdin();
-        let line1 = stdin.lock().lines().next().unwrap().unwrap();
-        if ["", "y", "Y"].contains(&line1.as_str()) {
-            accept = true;
+            let value = choices.remove(index);
+            choices.push(value);
+
+            _write_config(config);
+
         }
     }
-
-    let value = config.get_mut(&args.category).expect("category not found").choices.remove(index);
-    config.get_mut(&args.category).expect("category not found").choices.push(value);
-
-    _write_config(config);
-}
-
-
-/// Define the default for the model setting as Gaussian.
-fn _default_model() -> CategoryType {
-    return CategoryType::Gaussian;
 }
 
 
