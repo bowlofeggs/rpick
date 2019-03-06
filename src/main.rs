@@ -44,6 +44,7 @@ enum CategoryType {
 
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ConfigCategory {
     #[serde(default = "_default_model")]
     model: CategoryType,
