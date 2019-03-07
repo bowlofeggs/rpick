@@ -37,17 +37,30 @@ struct Cli {
 }
 
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "model")]
 enum ConfigCategory {
+    Even {
+        choices: Vec<String>
+    },
     Gaussian {
         #[serde(default = "_default_stddev_scaling_factor")]
         stddev_scaling_factor: f64,
-        choices: Vec<String>},
-    Even {
-        choices: Vec<String>},
+        choices: Vec<String>
+    },
+    Weighted {
+        choices: Vec<WeightedChoice>
+    }
+}
+
+
+#[derive(PartialEq, Serialize, Deserialize)]
+struct WeightedChoice {
+    name: String,
+    #[serde(default = "_default_weight")]
+    weight: u64,
 }
 
 
@@ -56,12 +69,15 @@ fn main() {
     let mut config = _read_config().unwrap();
     let category = config.get_mut(&args.category).expect("category not found");
     match category {
+        ConfigCategory::Even { choices } => {
+            _pick_even(choices);
+        }
         ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
             _pick_gaussian(choices, *stddev_scaling_factor);
             _write_config(config);
         }
-        ConfigCategory::Even { choices } => {
-            _pick_even(choices);
+        ConfigCategory::Weighted { choices } => {
+            _pick_weighted(choices);
         }
     }
 }
@@ -70,6 +86,12 @@ fn main() {
 /// Define the default for the stddev_scaling_factor setting as 3.0.
 fn _default_stddev_scaling_factor() -> f64 {
     return 3.0;
+}
+
+
+/// Define the default for the weight setting as 1.
+fn _default_weight() -> u64 {
+    return 1;
 }
 
 
@@ -132,6 +154,21 @@ fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
 
     let value = choices.remove(index);
     choices.push(value);
+}
+
+
+/// Run the weighted model for the given choices.
+fn _pick_weighted(choices: &mut Vec<WeightedChoice>) {
+    let choices = choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>();
+
+    loop {
+        let mut rng = rand::thread_rng();
+        let choice = choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
+
+        if _get_consent(&choice[..]) {
+            break;
+        }
+    }
 }
 
 

@@ -140,6 +140,29 @@ album:
 ```
 
 
+## Weighted
+
+The ```weighted``` distribution model is a more general version of the ```even``` model that allows
+you to express different weights for each of the choices. It accepts two keys:
+
+* ```model```: This must be set to the string "weighted", in order to select this model.
+* ```choices```: This must be a list of objects. Each object accepts two keys:
+  - ```name```: This is required, and is the name of the choice.
+  - ```weight```: This is an integer expressing the weight for the choice. It is optional, and
+    defaults to 1.
+
+Example:
+
+```
+cereal:
+  model: weighted
+  choices:
+    - name: generic bran flakes
+    - name: cracklin oat bran
+      weight: 1000
+```
+
+
 # Changelog
 
 ## 0.1.0
