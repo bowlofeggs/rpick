@@ -12,7 +12,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! # rpick
 //!
-//! ```rpick``` helps pick items from a list of choices, using a Gaussian distribution.
+//! ```rpick``` helps pick items from a list of choices, using various algorithms.
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
@@ -22,6 +22,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 
 use rand::distributions::{Distribution,Normal};
+use rand::seq::SliceRandom;
 use serde::{Serialize, Deserialize};
 use structopt::StructOpt;
 
@@ -45,6 +46,8 @@ enum ConfigCategory {
         #[serde(default = "_default_stddev_scaling_factor")]
         stddev_scaling_factor: f64,
         choices: Vec<String>},
+    Even {
+        choices: Vec<String>},
 }
 
 
@@ -56,6 +59,9 @@ fn main() {
         ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
             _pick_gaussian(choices, *stddev_scaling_factor);
             _write_config(config);
+        }
+        ConfigCategory::Even { choices } => {
+            _pick_even(choices);
         }
     }
 }
@@ -75,28 +81,52 @@ fn _get_config_file_path() -> String {
 }
 
 
+/// Prompt the user for consent for the given choice, returning a bool true if they accept the
+/// choice, or false if they do not.
+fn _get_consent(choice: &str) -> bool {
+    print!("Choice is {}. Accept? (Y/n) ", choice);
+    io::stdout().flush().unwrap();
+    let stdin = io::stdin();
+    let line1 = stdin.lock().lines().next().unwrap().unwrap();
+    if ["", "y", "Y"].contains(&line1.as_str()) {
+        return true;
+    }
+    return false;
+}
+
+
+/// Use an even distribution random model to pick from the given choices.
+fn _pick_even(choices: &mut Vec<String>) {
+    let choices = choices.iter().map(|x| (x, 1)).collect::<Vec<_>>();
+
+    loop {
+        let mut rng = rand::thread_rng();
+        let choice = choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
+
+        if _get_consent(choice) {
+            break;
+        }
+    }
+}
+
+
 /// Run the gaussian model for the given choices and standard deviation scaling factor. When the
 /// user accepts a choice, move that choice to end of the choices Vector and return.
 fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
     let stddev = (choices.len() as f64) / stddev_scaling_factor;
     let normal = Normal::new(0.0, stddev);
-    let mut accept = false;
-    let mut index = 0;
+    let mut index;
 
-    while !accept {
+    loop {
         index = loop {
-            let index = normal.sample(&mut rand::thread_rng()).abs() as usize;
+            index = normal.sample(&mut rand::thread_rng()).abs() as usize;
             if index < choices.len() {
                 break index;
             }
         };
 
-        print!("Choice is {}. Accept? (Y/n) ", choices[index]);
-        io::stdout().flush().unwrap();
-        let stdin = io::stdin();
-        let line1 = stdin.lock().lines().next().unwrap().unwrap();
-        if ["", "y", "Y"].contains(&line1.as_str()) {
-            accept = true;
+        if _get_consent(&choices[index][..]) {
+            break;
         }
     }
 
