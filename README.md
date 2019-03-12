@@ -82,7 +82,8 @@ This project is available on [crates.io](https://crates.io/crates/rpick).
 
 # Models
 
-```rpick``` is capable of two different algorithms for picking choices: even and gaussian.
+```rpick``` is capable of a few different algorithms for picking choices: even, gaussian, lottery,
+and weighted.
 
 
 ## Even
@@ -137,6 +138,35 @@ album:
     - "Townes Van Zandt/High, Low and In Between"
     - Tori Amos/From The Choirgirl Hotel
     - Zao/Parade Of Chaos
+```
+
+
+## Lottery
+
+The ```lottery``` distribution model is a dynamic version of the ```weighted``` model. Each of the
+choices has a certain number of lottery tickets that influence how likely they are to be picked that
+round. Once an item is picked, it loses all of its lottery tickets and every choice that wasn't
+picked gains more lottery tickets. It accepts three keys:
+
+* ```model```: This must be set to the string "lottery", in order to select this model.
+* ```choices```: This must be a list of objects. Each object accepts three keys:
+  - ```name```: This is required, and is the name of the choice.
+  - ```tickets```: The current number of lottery tickets that this choice has. This is optional, an
+    integer, and defaults to 1.
+  - ```weight```: This is an integer expressing how many lottery tickets are given to this choice
+    when it is not chosen. You can use this to influence how often this item gets favored relative
+    to the other choices. It is optional, and defaults to 1.
+
+Example:
+
+```
+activity:
+  model: lottery
+  choices:
+    - name: exercise
+    - name: read documentation
+    - name: watch tv
+      weight: 1000
 ```
 
 

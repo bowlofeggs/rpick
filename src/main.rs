@@ -50,9 +50,22 @@ enum ConfigCategory {
         stddev_scaling_factor: f64,
         choices: Vec<String>
     },
+    Lottery {
+        choices: Vec<LotteryChoice>
+    },
     Weighted {
         choices: Vec<WeightedChoice>
     }
+}
+
+
+#[derive(PartialEq, Serialize, Deserialize)]
+struct LotteryChoice {
+    name: String,
+    #[serde(default = "_default_weight")]
+    tickets: u64,
+    #[serde(default = "_default_weight")]
+    weight: u64,
 }
 
 
@@ -74,6 +87,10 @@ fn main() {
         }
         ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
             _pick_gaussian(choices, *stddev_scaling_factor);
+            _write_config(config);
+        }
+        ConfigCategory::Lottery { choices } => {
+            _pick_lottery(choices);
             _write_config(config);
         }
         ConfigCategory::Weighted { choices } => {
@@ -154,6 +171,27 @@ fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
 
     let value = choices.remove(index);
     choices.push(value);
+}
+
+
+/// Run the lottery model for the given choices.
+fn _pick_lottery(choices: &mut Vec<LotteryChoice>) {
+    let weighted_choices = choices.iter().enumerate().map(
+        |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>();
+
+    let index = loop {
+        let mut rng = rand::thread_rng();
+        let (index, choice) = weighted_choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
+
+        if _get_consent(&choice[..]) {
+            break index;
+        }
+    };
+
+    for choice in choices.iter_mut() {
+        choice.tickets += choice.weight;
+    }
+    choices[index].tickets = 0;
 }
 
 
