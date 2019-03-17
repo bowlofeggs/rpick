@@ -157,15 +157,14 @@ fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
     let mut index;
 
     loop {
-        index = loop {
-            index = normal.sample(&mut rand::thread_rng()).abs() as usize;
-            if index < choices.len() {
-                break index;
-            }
-        };
-
-        if _get_consent(&choices[index][..]) {
-            break;
+        index = normal.sample(&mut rand::thread_rng()).abs() as usize;
+        match choices.get(index) {
+            Some(value) => {
+                if _get_consent(&value[..]) {
+                    break;
+                }
+            },
+            None => ()
         }
     }
 
