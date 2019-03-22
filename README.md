@@ -16,8 +16,10 @@ $ sudo dnf module enable rpick:latest
 $ sudo dnf install rpick
 ```
 
-If you are on another operating system, you can install rpick by
-[installing Rust](https://www.rust-lang.org/tools/install), and then using Rust's cargo tool:
+If you are not using Fedora, ```rpick``` is also
+[available on crates.io](https://crates.io/crates/rpick). You can install rpick this way by first
+[installing Rust](https://www.rust-lang.org/tools/install), and then using Rust's cargo tool to
+install rpick:
 
 ```
 $ cargo install rpick
@@ -96,8 +98,6 @@ which models are available and how you can configure them.
 It added one setting to your restaurant object that wasn't there originally:
 ```stddev_scaling_factor```. You can read more about this setting in the Gaussian model
 documentation below.
-
-This project is available on [crates.io](https://crates.io/crates/rpick).
 
 
 # Models
