@@ -6,6 +6,20 @@ you haven't visited in a while, but you also might not want to use a strict leas
 model and spice things up with some element of chance, with restaurants you've least recently
 visited getting a boost in their chances.
 
+You can install ```rpick``` in Fedora by enabling its module:
+
+```
+$ sudo dnf module enable rpick:latest
+$ sudo dnf install rpick
+```
+
+If you are on another operating system, you can install rpick by
+[installing Rust](https://www.rust-lang.org/tools/install), and then using Rust's cargo tool:
+
+```
+$ cargo install rpick
+```
+
 ```rpick``` keeps its state in a [YAML](https://yaml.org/) file in your home config directory called
 ```rpick.yml```. For now, users must create this file by hand, and ```rpick``` will manage it from
 there. To get started with some examples, create ```~/.config/rpick.yml``` like this:
