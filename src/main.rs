@@ -17,7 +17,7 @@ use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::{self, BufRead};
+use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 
@@ -122,11 +122,10 @@ fn _get_config_file_path() -> String {
 
 /// Prompt the user for consent for the given choice, returning a bool true if they accept the
 /// choice, or false if they do not.
-fn _get_consent(choice: &str) -> bool {
+fn _get_consent(choice: &str, stdin: impl BufRead) -> bool {
     print!("Choice is {}. Accept? (Y/n) ", choice);
     io::stdout().flush().unwrap();
-    let stdin = io::stdin();
-    let line1 = stdin.lock().lines().next().unwrap().unwrap();
+    let line1 = stdin.lines().next().unwrap().unwrap();
     if ["", "y", "Y"].contains(&line1.as_str()) {
         return true;
     }
@@ -142,7 +141,7 @@ fn _pick_even(choices: &mut Vec<String>) {
         let mut rng = rand::thread_rng();
         let choice = choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
 
-        if _get_consent(choice) {
+        if _get_consent(choice, io::stdin().lock()) {
             break;
         }
     }
@@ -160,7 +159,7 @@ fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
         index = normal.sample(&mut rand::thread_rng()).abs() as usize;
         match choices.get(index) {
             Some(value) => {
-                if _get_consent(&value[..]) {
+                if _get_consent(&value[..], io::stdin().lock()) {
                     break;
                 }
             },
@@ -182,7 +181,7 @@ fn _pick_lottery(choices: &mut Vec<LotteryChoice>) {
         let mut rng = rand::thread_rng();
         let (index, choice) = weighted_choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
 
-        if _get_consent(&choice[..]) {
+        if _get_consent(&choice[..], io::stdin().lock()) {
             break index;
         }
     };
@@ -202,7 +201,7 @@ fn _pick_weighted(choices: &mut Vec<WeightedChoice>) {
         let mut rng = rand::thread_rng();
         let choice = choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
 
-        if _get_consent(&choice[..]) {
+        if _get_consent(&choice[..], io::stdin().lock()) {
             break;
         }
     }
@@ -230,4 +229,20 @@ fn _write_config(config: BTreeMap<String, ConfigCategory>) {
     let yaml = serde_yaml::to_string(&config).unwrap();
 
     f.write_all(&yaml.into_bytes()).expect("Could not write {}");
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_consent() {
+        assert_eq!(_get_consent("do you want this", &b"y"[..]), true);
+        assert_eq!(_get_consent("do you want this", &b"Y"[..]), true);
+        assert_eq!(_get_consent("do you want this", &b"\n"[..]), true);
+        assert_eq!(_get_consent("do you want this", &b"f"[..]), false);
+        assert_eq!(_get_consent("do you want this", &b"F"[..]), false);
+        assert_eq!(_get_consent("do you want this", &b"anything else"[..]), false);
+    }
 }

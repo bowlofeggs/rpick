@@ -1,0 +1,28 @@
+image: rust
+
+cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    untracked: true
+
+stages:
+    - build
+    - test
+
+before_script:
+    # This lets us cache cargo's downloads
+    - "export CARGO_HOME=.cargo"
+
+cargo build:
+    stage: build
+    script:
+        - cargo build
+
+cargo doc:
+    stage: test
+    script:
+        - cargo doc
+
+cargo test:
+    stage: test
+    script:
+        - cargo test
