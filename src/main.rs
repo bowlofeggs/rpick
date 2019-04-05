@@ -13,17 +13,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! # rpick
 //!
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
-use std::collections::BTreeMap;
-use std::error::Error;
-use std::fs::File;
-use std::fs::OpenOptions;
-use std::io;
-use std::io::prelude::*;
-use std::io::BufReader;
 
-use rand::distributions::{Distribution,Normal};
-use rand::seq::SliceRandom;
-use serde::{Serialize, Deserialize};
+use std::io;
+
 use structopt::StructOpt;
 
 
@@ -37,212 +29,34 @@ struct Cli {
 }
 
 
-#[derive(PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "model")]
-enum ConfigCategory {
-    Even {
-        choices: Vec<String>
-    },
-    Gaussian {
-        #[serde(default = "_default_stddev_scaling_factor")]
-        stddev_scaling_factor: f64,
-        choices: Vec<String>
-    },
-    Lottery {
-        choices: Vec<LotteryChoice>
-    },
-    Weighted {
-        choices: Vec<WeightedChoice>
-    }
-}
-
-
-#[derive(PartialEq, Serialize, Deserialize)]
-struct LotteryChoice {
-    name: String,
-    #[serde(default = "_default_weight")]
-    tickets: u64,
-    #[serde(default = "_default_weight")]
-    weight: u64,
-}
-
-
-#[derive(PartialEq, Serialize, Deserialize)]
-struct WeightedChoice {
-    name: String,
-    #[serde(default = "_default_weight")]
-    weight: u64,
-}
-
-
 fn main() {
     let args = Cli::from_args();
-    let mut config = _read_config().unwrap();
-    let category = config.get_mut(&args.category).expect("category not found");
-    match category {
-        ConfigCategory::Even { choices } => {
-            _pick_even(choices);
-        }
-        ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
-            _pick_gaussian(choices, *stddev_scaling_factor);
-            _write_config(config);
-        }
-        ConfigCategory::Lottery { choices } => {
-            _pick_lottery(choices);
-            _write_config(config);
-        }
-        ConfigCategory::Weighted { choices } => {
-            _pick_weighted(choices);
+    let config = rpick::read_config(get_config_file_path());
+    match config {
+        Ok(config) => {
+            let mut config = config;
+            let stdio = io::stdin();
+            let input = stdio.lock();
+            let output = io::stdout();
+
+            let mut engine = rpick::Engine{input: input, output: output, rng: rand::thread_rng()};
+            match engine.pick(&mut config, args.category) {
+                Ok(_) => {},
+                Err(error) => {
+                    panic!(format!("{}", error));
+                }
+            }
+        },
+        Err(error) => {
+            panic!(format!("{}", error));
         }
     }
-}
-
-
-/// Define the default for the stddev_scaling_factor setting as 3.0.
-fn _default_stddev_scaling_factor() -> f64 {
-    return 3.0;
-}
-
-
-/// Define the default for the weight setting as 1.
-fn _default_weight() -> u64 {
-    return 1;
 }
 
 
 /// Return the path to the user's config file.
-fn _get_config_file_path() -> String {
+fn get_config_file_path() -> String {
     let config_dir = dirs::config_dir().expect("Unable to find config dir.");
     let config_file = config_dir.join(CONFIG_FILE);
     return String::from(config_file.to_str().expect("Unable to determine config."));
-}
-
-
-/// Prompt the user for consent for the given choice, returning a bool true if they accept the
-/// choice, or false if they do not.
-fn _get_consent(choice: &str, stdin: impl BufRead) -> bool {
-    print!("Choice is {}. Accept? (Y/n) ", choice);
-    io::stdout().flush().unwrap();
-    let line1 = stdin.lines().next().unwrap().unwrap();
-    if ["", "y", "Y"].contains(&line1.as_str()) {
-        return true;
-    }
-    return false;
-}
-
-
-/// Use an even distribution random model to pick from the given choices.
-fn _pick_even(choices: &mut Vec<String>) {
-    let choices = choices.iter().map(|x| (x, 1)).collect::<Vec<_>>();
-
-    loop {
-        let mut rng = rand::thread_rng();
-        let choice = choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
-
-        if _get_consent(choice, io::stdin().lock()) {
-            break;
-        }
-    }
-}
-
-
-/// Run the gaussian model for the given choices and standard deviation scaling factor. When the
-/// user accepts a choice, move that choice to end of the choices Vector and return.
-fn _pick_gaussian(choices: &mut Vec<String>, stddev_scaling_factor: f64) {
-    let stddev = (choices.len() as f64) / stddev_scaling_factor;
-    let normal = Normal::new(0.0, stddev);
-    let mut index;
-
-    loop {
-        index = normal.sample(&mut rand::thread_rng()).abs() as usize;
-        match choices.get(index) {
-            Some(value) => {
-                if _get_consent(&value[..], io::stdin().lock()) {
-                    break;
-                }
-            },
-            None => ()
-        }
-    }
-
-    let value = choices.remove(index);
-    choices.push(value);
-}
-
-
-/// Run the lottery model for the given choices.
-fn _pick_lottery(choices: &mut Vec<LotteryChoice>) {
-    let weighted_choices = choices.iter().enumerate().map(
-        |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>();
-
-    let index = loop {
-        let mut rng = rand::thread_rng();
-        let (index, choice) = weighted_choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
-
-        if _get_consent(&choice[..], io::stdin().lock()) {
-            break index;
-        }
-    };
-
-    for choice in choices.iter_mut() {
-        choice.tickets += choice.weight;
-    }
-    choices[index].tickets = 0;
-}
-
-
-/// Run the weighted model for the given choices.
-fn _pick_weighted(choices: &mut Vec<WeightedChoice>) {
-    let choices = choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>();
-
-    loop {
-        let mut rng = rand::thread_rng();
-        let choice = choices.choose_weighted(&mut rng, |item| item.1).unwrap().0;
-
-        if _get_consent(&choice[..], io::stdin().lock()) {
-            break;
-        }
-    }
-}
-
-
-/// Return the user's config as a BTreeMap.
-fn _read_config() -> Result<BTreeMap<String, ConfigCategory>, Box<Error>> {
-    let config_file_path = _get_config_file_path();
-    let f = File::open(&config_file_path)?;
-    let reader = BufReader::new(f);
-
-    let config: BTreeMap<String, ConfigCategory> = serde_yaml::from_reader(reader)?;
-    return Ok(config);
-}
-
-
-/// Save the data from the given BTreeMap to the user's config file.
-fn _write_config(config: BTreeMap<String, ConfigCategory>) {
-    let config_file_path = _get_config_file_path();
-    let f = OpenOptions::new().write(true).create(true).truncate(true).open(
-        &config_file_path);
-    let error_msg = format!("Could not write {}", &config_file_path);
-    let mut f = f.expect(&error_msg);
-    let yaml = serde_yaml::to_string(&config).unwrap();
-
-    f.write_all(&yaml.into_bytes()).expect("Could not write {}");
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn get_consent() {
-        assert_eq!(_get_consent("do you want this", &b"y"[..]), true);
-        assert_eq!(_get_consent("do you want this", &b"Y"[..]), true);
-        assert_eq!(_get_consent("do you want this", &b"\n"[..]), true);
-        assert_eq!(_get_consent("do you want this", &b"f"[..]), false);
-        assert_eq!(_get_consent("do you want this", &b"F"[..]), false);
-        assert_eq!(_get_consent("do you want this", &b"anything else"[..]), false);
-    }
 }
