@@ -152,7 +152,7 @@ where
 
 
 /// Return the user's config as a BTreeMap.
-pub fn read_config(config_file_path: String)
+pub fn read_config(config_file_path: &String)
         -> Result<BTreeMap<String, ConfigCategory>, Box<error::Error>> {
     let f = File::open(&config_file_path)?;
     let reader = BufReader::new(f);
@@ -163,7 +163,7 @@ pub fn read_config(config_file_path: String)
 
 
 /// Save the data from the given BTreeMap to the user's config file.
-pub fn write_config(config_file_path: String, config: BTreeMap<String, ConfigCategory>) {
+pub fn write_config(config_file_path: &String, config: BTreeMap<String, ConfigCategory>) {
     let f = OpenOptions::new().write(true).create(true).truncate(true).open(
         &config_file_path);
     let error_msg = format!("Could not write {}", &config_file_path);

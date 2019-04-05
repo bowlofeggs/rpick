@@ -31,7 +31,8 @@ struct Cli {
 
 fn main() {
     let args = Cli::from_args();
-    let config = rpick::read_config(get_config_file_path());
+    let config_path = get_config_file_path();
+    let config = rpick::read_config(&config_path);
     match config {
         Ok(config) => {
             let mut config = config;
@@ -41,7 +42,9 @@ fn main() {
 
             let mut engine = rpick::Engine{input: input, output: output, rng: rand::thread_rng()};
             match engine.pick(&mut config, args.category) {
-                Ok(_) => {},
+                Ok(_) => {
+                    rpick::write_config(&config_path, config);
+                },
                 Err(error) => {
                     panic!(format!("{}", error));
                 }
