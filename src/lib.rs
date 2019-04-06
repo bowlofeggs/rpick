@@ -24,6 +24,26 @@ use rand::seq::SliceRandom;
 use serde::{Serialize, Deserialize};
 
 
+/// The rpick Engine object allows you to write your own rpick interface.
+///
+/// # Attributes
+///
+/// * `input` - This must be an object that implements the [`BufRead`] trait, and is used to receive
+///             a y or n answer from a user, when prompted for whether they accept some input. The
+///             rpick CLI sets this to stdin, for example.
+/// * `output` - This must be an object that implements the [`Write`] trait. It is used to prompt
+///              the user to accept a choice.
+/// * `rng` - This must be a random number generator that implements the [`rand::RngCore`] trait.
+///
+/// # Example
+///
+/// ```
+/// let stdio = std::io::stdin();
+/// let input = stdio.lock();
+/// let output = std::io::stdout();
+///
+/// let mut engine = rpick::Engine{input: input, output: output, rng: rand::thread_rng()};
+/// ```
 pub struct Engine<I, O, R> {
     pub input: I,
     pub output: O,
@@ -37,6 +57,38 @@ where
     O: Write,
     R: rand::RngCore,
 {
+    /// Pick an item from the [`ConfigCategory`] referenced by the given `category`.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - A mapping of category names to [`ConfigCategory`] objects, which contain the
+    ///              parameters which should be used for the pick.
+    /// * `category` - The category you wish to choose from.
+    ///
+    /// # Returns
+    ///
+    /// This will return the chosen item.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::collections::BTreeMap;
+    ///
+    /// use rand::SeedableRng;
+    ///
+    /// let input = String::from("y");
+    /// let output = Vec::new();
+    /// let mut engine = rpick::Engine{input: input.as_bytes(), output: output,
+    ///                                rng: rand::rngs::SmallRng::seed_from_u64(42)};
+    /// let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
+    /// let category = rpick::ConfigCategory::Even{choices: choices};
+    /// let mut config = BTreeMap::new();
+    /// config.insert("things".to_string(), category);
+    ///
+    /// let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+    ///
+    /// assert_eq!(choice, "this");
+    /// ```
     pub fn pick(&mut self, config: &mut BTreeMap<String, ConfigCategory>, category: String)
             -> Result<String, String> {
         let config_category = config.get_mut(&category[..]);
@@ -153,6 +205,14 @@ where
 
 
 /// Return the user's config as a BTreeMap.
+///
+/// # Arguments
+///
+/// * `config_file_path` - A filesystem path to a YAML file that should be read.
+///
+/// # Returns
+///
+/// Returns a mapping of YAML to [`ConfigCategory`]'s, or an Error.
 pub fn read_config(config_file_path: &String)
         -> Result<BTreeMap<String, ConfigCategory>, Box<error::Error>> {
     let f = File::open(&config_file_path)?;
@@ -164,6 +224,11 @@ pub fn read_config(config_file_path: &String)
 
 
 /// Save the data from the given BTreeMap to the user's config file.
+///
+/// # Arguments
+///
+/// * `config_file_path` - A filesystem path that the config should be written to.
+/// * `config` - The config that should be serialized as YAML.
 pub fn write_config(config_file_path: &String, config: BTreeMap<String, ConfigCategory>) {
     let f = OpenOptions::new().write(true).create(true).truncate(true).open(
         &config_file_path);
@@ -175,28 +240,66 @@ pub fn write_config(config_file_path: &String, config: BTreeMap<String, ConfigCa
 }
 
 
+/// A category of items that can be chosen from.
+///
+/// Each variant of this Enum maps to one of the supported algorithms.
 #[derive(PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "model")]
 pub enum ConfigCategory {
+    /// The Even variant picks from its choices with even distribution.
+    ///
+    /// # Attributes
+    ///
+    /// * `choices` - The list of choices to pick from.
     Even {
         choices: Vec<String>
     },
+    /// The Gaussian variant uses a
+    /// [Gaussian distribution](https://en.wikipedia.org/wiki/Normal_distribution) to prefer choices
+    /// near the beginning of the list of choices over those at the end. Once a choice has been
+    /// accepted, it is moved to the end of the list.
+    ///
+    /// # Attributes
+    ///
+    /// * `stddev_scaling_factor` - This is used to derive the standard deviation; the standard
+    ///   deviation is the length of the list of choices, divided by this scaling factor.
+    /// * `choices` - The list of choices to pick from.
     Gaussian {
         #[serde(default = "default_stddev_scaling_factor")]
         stddev_scaling_factor: f64,
         choices: Vec<String>
     },
+    /// The Lottery variant uses a weighted distribution to pick items, with each items chances
+    /// being tied to how many tickets it has. When a choice is accepted, that choice's ticket
+    /// count is set to 0, and every choice not chosen receives its weight in additional tickets.
+    ///
+    /// # Attributes
+    ///
+    /// * `choices` - The list of choices to pick from.
     Lottery {
         choices: Vec<LotteryChoice>
     },
+    /// The Weighted variant is a simple weighted distribution.
+    ///
+    /// # Attributes
+    ///
+    /// * `choices` - The list of choices to pick from.
     Weighted {
         choices: Vec<WeightedChoice>
     }
 }
 
 
+/// Represents an individual choice for the lottery model.
+///
+/// # Attributes
+///
+/// * `name` - The name of the choice.
+/// * `tickets` - The current number of tickets the choice has.
+/// * `weight` - The number of tickets that will be added to `tickets` each time this choice is not
+///   picked.
 #[derive(PartialEq, Serialize, Deserialize)]
 pub struct LotteryChoice {
     name: String,
@@ -207,6 +310,12 @@ pub struct LotteryChoice {
 }
 
 
+/// Represents an individual choice for the weighted model.
+///
+/// # Attributes
+///
+/// * `name` - The name of the choice
+/// * `weight` - How much chance this choice has of being chosen, relative to the other choices.
 #[derive(PartialEq, Serialize, Deserialize)]
 pub struct WeightedChoice {
     name: String,
@@ -263,13 +372,13 @@ mod tests {
         let input = String::from("y");
         let output = Vec::new();
         let mut engine = Engine{input: input.as_bytes(), output: output,
-                                rng: rand::rngs::SmallRng::seed_from_u64(42)};
+                                rng: rand::rngs::SmallRng::seed_from_u64(1)};
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
 
         let result = engine.pick_even(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is this. Accept? (Y/n) ");
-        assert_eq!(result, "this");
+        assert_eq!(output, "Choice is the other. Accept? (Y/n) ");
+        assert_eq!(result, "the other");
     }
 }
