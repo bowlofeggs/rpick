@@ -38,25 +38,24 @@ where
     R: rand::RngCore,
 {
     pub fn pick(&mut self, config: &mut BTreeMap<String, ConfigCategory>, category: String)
-            -> Result<(), String> {
+            -> Result<String, String> {
         let config_category = config.get_mut(&category[..]);
         match config_category {
             Some(category) => {
                 match category {
                     ConfigCategory::Even { choices } => {
-                        self.pick_even(choices);
+                        Ok(self.pick_even(choices))
                     }
                     ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
-                        self.pick_gaussian(choices, *stddev_scaling_factor);
+                        Ok(self.pick_gaussian(choices, *stddev_scaling_factor))
                     }
                     ConfigCategory::Lottery { choices } => {
-                        self.pick_lottery(choices);
+                        Ok(self.pick_lottery(choices))
                     }
                     ConfigCategory::Weighted { choices } => {
-                        self.pick_weighted(choices);
+                        Ok(self.pick_weighted(choices))
                     }
                 }
-                Ok(())
             }
             None => {
                 Err(format!("Category {} not found in config.", category))
@@ -78,14 +77,14 @@ where
     }
 
     /// Use an even distribution random model to pick from the given choices.
-    fn pick_even(&mut self, choices: &Vec<String>) {
+    fn pick_even(&mut self, choices: &Vec<String>) -> String {
         let choices = choices.iter().map(|x| (x, 1)).collect::<Vec<_>>();
 
         loop {
             let choice = choices.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
 
             if self.get_consent(choice) {
-                break;
+                return choice.clone();
             }
         }
     }
@@ -93,7 +92,7 @@ where
 
     /// Run the gaussian model for the given choices and standard deviation scaling factor. When the
     /// user accepts a choice, move that choice to end of the choices Vector and return.
-    fn pick_gaussian(&mut self, choices: &mut Vec<String>, stddev_scaling_factor: f64) {
+    fn pick_gaussian(&mut self, choices: &mut Vec<String>, stddev_scaling_factor: f64) -> String {
         let stddev = (choices.len() as f64) / stddev_scaling_factor;
         let normal = Normal::new(0.0, stddev);
         let mut index;
@@ -111,12 +110,13 @@ where
         }
 
         let value = choices.remove(index);
-        choices.push(value);
+        choices.push(value.clone());
+        value
     }
 
 
     /// Run the lottery model for the given choices.
-    fn pick_lottery(&mut self, choices: &mut Vec<LotteryChoice>) {
+    fn pick_lottery(&mut self, choices: &mut Vec<LotteryChoice>) -> String {
         let weighted_choices = choices.iter().enumerate().map(
             |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>();
 
@@ -133,18 +133,19 @@ where
             choice.tickets += choice.weight;
         }
         choices[index].tickets = 0;
+        choices[index].name.clone()
     }
 
 
     /// Run the weighted model for the given choices.
-    fn pick_weighted(&mut self, choices: &Vec<WeightedChoice>) {
+    fn pick_weighted(&mut self, choices: &Vec<WeightedChoice>) -> String {
         let choices = choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>();
 
         loop {
             let choice = choices.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
 
             if self.get_consent(&choice[..]) {
-                break;
+                return choice.clone();
             }
         }
     }
@@ -265,9 +266,10 @@ mod tests {
                                 rng: rand::rngs::SmallRng::seed_from_u64(42)};
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
 
-        engine.pick_even(&choices);
+        let result = engine.pick_even(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is this. Accept? (Y/n) ");
+        assert_eq!(result, "this");
     }
 }
