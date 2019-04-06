@@ -129,6 +129,8 @@ You might want to consult the weather before using ```rpick``` for this use case
 
 ## Gaussian
 
+[![XKCD's Normal Distribution](https://imgs.xkcd.com/comics/normal_distribution.png)](https://xkcd.com/2118/)
+
 The ```gaussian``` distribution model is more complex. It uses the
 [Gaussian distribution](https://en.wikipedia.org/wiki/Normal_distribution) to prefer choices that
 have been less recently chosen. Things near the top of the list of choices have the highest
