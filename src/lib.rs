@@ -300,6 +300,7 @@ pub enum ConfigCategory {
 /// * `tickets` - The current number of tickets the choice has.
 /// * `weight` - The number of tickets that will be added to `tickets` each time this choice is not
 ///   picked.
+#[derive(Debug)]
 #[derive(PartialEq, Serialize, Deserialize)]
 pub struct LotteryChoice {
     name: String,
@@ -368,6 +369,24 @@ mod tests {
     }
 
     #[test]
+    fn test_pick() {
+        let input = String::from("N\ny");
+        let output = Vec::new();
+        let mut engine = Engine{input: input.as_bytes(), output: output,
+                                rng: rand::rngs::SmallRng::seed_from_u64(42)};
+        let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
+        let category = ConfigCategory::Even{choices: choices};
+        let mut config = BTreeMap::new();
+        config.insert("things".to_string(), category);
+
+        let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+
+        assert_eq!(choice, "the other");
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+    }
+
+    #[test]
     fn test_pick_even() {
         let input = String::from("y");
         let output = Vec::new();
@@ -380,5 +399,65 @@ mod tests {
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is the other. Accept? (Y/n) ");
         assert_eq!(result, "the other");
+    }
+
+    #[test]
+    fn test_pick_gaussian() {
+        let input = String::from("y");
+        let output = Vec::new();
+        let mut engine = Engine{input: input.as_bytes(), output: output,
+                                rng: rand::rngs::SmallRng::seed_from_u64(1)};
+        let mut choices = vec![
+            String::from("this"), String::from("that"), String::from("the other")];
+
+        let result = engine.pick_gaussian(&mut choices, 3.0);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is that. Accept? (Y/n) ");
+        assert_eq!(result, "that");
+        assert_eq!(choices,
+                   vec![String::from("this"), String::from("the other"), String::from("that")]);
+    }
+
+    #[test]
+    fn test_pick_lottery() {
+        let input = String::from("y");
+        let output = Vec::new();
+        let mut engine = Engine{input: input.as_bytes(), output: output,
+                                rng: rand::rngs::SmallRng::seed_from_u64(2)};
+        let mut choices = vec![
+            LotteryChoice{name: "this".to_string(), tickets: 1, weight: 1},
+            LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
+            LotteryChoice{name: "the other".to_string(), tickets:3, weight: 9}];
+
+        let result = engine.pick_lottery(&mut choices);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is the other. Accept? (Y/n) ");
+        assert_eq!(result, "the other");
+        assert_eq!(
+            choices,
+            vec![
+                LotteryChoice{name: "this".to_string(), tickets: 2, weight: 1},
+                LotteryChoice{name: "that".to_string(), tickets: 6, weight: 4},
+                LotteryChoice{name: "the other".to_string(), tickets: 0, weight: 9}]);
+    }
+
+    #[test]
+    fn test_pick_weighted() {
+        let input = String::from("y");
+        let output = Vec::new();
+        let mut engine = Engine{input: input.as_bytes(), output: output,
+                                rng: rand::rngs::SmallRng::seed_from_u64(3)};
+        let mut choices = vec![
+            WeightedChoice{name: "this".to_string(), weight: 1},
+            WeightedChoice{name: "that".to_string(), weight: 4},
+            WeightedChoice{name: "the other".to_string(), weight: 9}];
+
+        let result = engine.pick_weighted(&mut choices);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is that. Accept? (Y/n) ");
+        assert_eq!(result, "that");
     }
 }
