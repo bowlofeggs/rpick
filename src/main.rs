@@ -40,7 +40,7 @@ fn main() {
             let input = stdio.lock();
             let output = io::stdout();
 
-            let mut engine = rpick::Engine{input: input, output: output, rng: rand::thread_rng()};
+            let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
             match engine.pick(&mut config, args.category) {
                 Ok(_) => {
                     rpick::write_config(&config_path, config);

@@ -28,26 +28,20 @@ use serde::{Serialize, Deserialize};
 ///
 /// # Attributes
 ///
-/// * `input` - This must be an object that implements the [`BufRead`] trait, and is used to receive
-///             a y or n answer from a user, when prompted for whether they accept some input. The
-///             rpick CLI sets this to stdin, for example.
-/// * `output` - This must be an object that implements the [`Write`] trait. It is used to prompt
-///              the user to accept a choice.
-/// * `rng` - This must be a random number generator that implements the [`rand::RngCore`] trait.
-///
-/// # Example
-///
-/// ```
-/// let stdio = std::io::stdin();
-/// let input = stdio.lock();
-/// let output = std::io::stdout();
-///
-/// let mut engine = rpick::Engine{input: input, output: output, rng: rand::thread_rng()};
-/// ```
+/// * `input` - This must be an object that implements the [`BufRead`] trait, and is used to
+///             receive a y or n answer from a user, when prompted for whether they accept some
+///             input. The rpick CLI sets this to stdin, for example.
+/// * `output` - This must be an object that implements the [`Write`] trait. It is used to
+///              prompt the user to accept a choice.
+/// * `rng` - This must be a random number generator that implements the [`rand::RngCore`]
+///           trait.
+/// * `rejected_choices` - A list of choices the user has rejected. We maintain this so we don't
+///                        ask again about a choice they've already declined.
 pub struct Engine<I, O, R> {
-    pub input: I,
-    pub output: O,
-    pub rng: R
+    input: I,
+    output: O,
+    rng: R,
+    rejected_choices: Vec<String>
 }
 
 
@@ -57,6 +51,31 @@ where
     O: Write,
     R: rand::RngCore,
 {
+    /// Instantiate an Engine.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - This must be an object that implements the [`BufRead`] trait, and is used to
+    ///             receive a y or n answer from a user, when prompted for whether they accept some
+    ///             input. The rpick CLI sets this to stdin, for example.
+    /// * `output` - This must be an object that implements the [`Write`] trait. It is used to
+    ///              prompt the user to accept a choice.
+    /// * `rng` - This must be a random number generator that implements the [`rand::RngCore`]
+    ///           trait.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let stdio = std::io::stdin();
+    /// let input = stdio.lock();
+    /// let output = std::io::stdout();
+    ///
+    /// let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
+    /// ```
+    pub fn new(input: I, output: O, rng:R) -> Engine<I, O, R> {
+        Engine{input: input, output: output, rng: rng, rejected_choices: Vec::new()}
+    }
+
     /// Pick an item from the [`ConfigCategory`] referenced by the given `category`.
     ///
     /// # Arguments
@@ -78,8 +97,8 @@ where
     ///
     /// let input = String::from("y");
     /// let output = Vec::new();
-    /// let mut engine = rpick::Engine{input: input.as_bytes(), output: output,
-    ///                                rng: rand::rngs::SmallRng::seed_from_u64(42)};
+    /// let mut engine = rpick::Engine::new(input.as_bytes(), output,
+    ///                                     rand::rngs::SmallRng::seed_from_u64(42));
     /// let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
     /// let category = rpick::ConfigCategory::Even{choices: choices};
     /// let mut config = BTreeMap::new();
@@ -117,7 +136,11 @@ where
 
     /// Prompt the user for consent for the given choice, returning a bool true if they accept the
     /// choice, or false if they do not.
-    fn get_consent(&mut self, choice: &str) -> bool {
+    fn get_consent(&mut self, choice: &str, num_choices: usize) -> bool {
+        if self.rejected_choices.contains(&choice.to_string()) {
+            return false;
+        }
+
         write!(self.output, "Choice is {}. Accept? (Y/n) ", choice).expect(
             "Could not write to output");
         self.output.flush().unwrap();
@@ -125,6 +148,13 @@ where
         if ["", "y", "Y"].contains(&line1.as_str()) {
             return true;
         }
+        if self.rejected_choices.len() + 1 >= num_choices {
+            // The user has now rejected all choices. Rather than looping forever, we can just clear
+            // our rejected choices list and let them go through them all again.
+            self.rejected_choices = Vec::new();
+            write!(self.output, "🤨\n").expect("Could not write to output");
+        }
+        self.rejected_choices.push(choice.to_string());
         return false;
     }
 
@@ -135,7 +165,7 @@ where
         loop {
             let choice = choices.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
 
-            if self.get_consent(choice) {
+            if self.get_consent(choice, choices.len()) {
                 return choice.clone();
             }
         }
@@ -153,7 +183,7 @@ where
             index = normal.sample(&mut self.rng).abs() as usize;
             match choices.get(index) {
                 Some(value) => {
-                    if self.get_consent(&value[..]) {
+                    if self.get_consent(&value[..], choices.len()) {
                         break;
                     }
                 },
@@ -176,7 +206,7 @@ where
             let (index, choice) = weighted_choices.choose_weighted(
                 &mut self.rng, |item| item.1).unwrap().0;
 
-            if self.get_consent(&choice[..]) {
+            if self.get_consent(&choice[..], choices.len()) {
                 break index;
             }
         };
@@ -196,7 +226,7 @@ where
         loop {
             let choice = choices.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
 
-            if self.get_consent(&choice[..]) {
+            if self.get_consent(&choice[..], choices.len()) {
                 return choice.clone();
             }
         }
@@ -358,13 +388,18 @@ mod tests {
 
         for (input, expected_output) in tests.iter() {
             let output = Vec::new();
-            let mut engine = Engine{input: input.as_bytes(), output: output,
-                                    rng: rand::rngs::SmallRng::seed_from_u64(42)};
+            let mut engine = Engine::new(input.as_bytes(), output,
+                                         rand::rngs::SmallRng::seed_from_u64(42));
 
-            assert_eq!(engine.get_consent("do you want this"), *expected_output);
+            assert_eq!(engine.get_consent("do you want this", 2), *expected_output);
 
             let output = String::from_utf8(engine.output).expect("Not UTF-8");
             assert_eq!(output, "Choice is do you want this. Accept? (Y/n) ");
+            let mut expected_rejected_choices: Vec<String> = Vec::new();
+            if !expected_output {
+                expected_rejected_choices = vec![String::from("do you want this")];
+            }
+            assert_eq!(engine.rejected_choices, expected_rejected_choices);
         }
     }
 
@@ -372,8 +407,8 @@ mod tests {
     fn test_pick() {
         let input = String::from("N\ny");
         let output = Vec::new();
-        let mut engine = Engine{input: input.as_bytes(), output: output,
-                                rng: rand::rngs::SmallRng::seed_from_u64(42)};
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(42));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
         let category = ConfigCategory::Even{choices: choices};
         let mut config = BTreeMap::new();
@@ -390,8 +425,8 @@ mod tests {
     fn test_pick_even() {
         let input = String::from("y");
         let output = Vec::new();
-        let mut engine = Engine{input: input.as_bytes(), output: output,
-                                rng: rand::rngs::SmallRng::seed_from_u64(1)};
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(1));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
 
         let result = engine.pick_even(&choices);
@@ -405,8 +440,8 @@ mod tests {
     fn test_pick_gaussian() {
         let input = String::from("y");
         let output = Vec::new();
-        let mut engine = Engine{input: input.as_bytes(), output: output,
-                                rng: rand::rngs::SmallRng::seed_from_u64(1)};
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(1));
         let mut choices = vec![
             String::from("this"), String::from("that"), String::from("the other")];
 
@@ -423,8 +458,8 @@ mod tests {
     fn test_pick_lottery() {
         let input = String::from("y");
         let output = Vec::new();
-        let mut engine = Engine{input: input.as_bytes(), output: output,
-                                rng: rand::rngs::SmallRng::seed_from_u64(2)};
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(2));
         let mut choices = vec![
             LotteryChoice{name: "this".to_string(), tickets: 1, weight: 1},
             LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
@@ -447,8 +482,8 @@ mod tests {
     fn test_pick_weighted() {
         let input = String::from("y");
         let output = Vec::new();
-        let mut engine = Engine{input: input.as_bytes(), output: output,
-                                rng: rand::rngs::SmallRng::seed_from_u64(3)};
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(3));
         let mut choices = vec![
             WeightedChoice{name: "this".to_string(), weight: 1},
             WeightedChoice{name: "that".to_string(), weight: 4},
