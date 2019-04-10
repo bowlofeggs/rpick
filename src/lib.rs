@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
 //!
 use std::collections::BTreeMap;
-use std::error;
+use std::{error, fmt};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 
@@ -109,7 +109,7 @@ where
     /// assert_eq!(choice, "this");
     /// ```
     pub fn pick(&mut self, config: &mut BTreeMap<String, ConfigCategory>, category: String)
-            -> Result<String, String> {
+            -> Result<String, Box<dyn error::Error>> {
         let config_category = config.get_mut(&category[..]);
         match config_category {
             Some(category) => {
@@ -129,7 +129,8 @@ where
                 }
             }
             None => {
-                Err(format!("Category {} not found in config.", category))
+                Err(Box::new(ValueError::new(
+                    format!("Category {} not found in config.", category))))
             }
         }
     }
@@ -232,6 +233,35 @@ where
         }
     }
 }
+
+
+/// Returned in the event that an invalid parameter was used in the API.
+#[derive(Debug)]
+struct ValueError {
+    message: String
+}
+
+
+impl ValueError {
+    /// Construct a new ValueError.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The error message to accompany the ValueError.
+    fn new(message: String) -> ValueError {
+        ValueError{message: message}
+    }
+}
+
+
+impl fmt::Display for ValueError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+
+impl error::Error for ValueError {}
 
 
 /// Return the user's config as a BTreeMap.
@@ -419,6 +449,27 @@ mod tests {
         assert_eq!(choice, "the other");
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+    }
+
+    #[test]
+    fn test_pick_nonexistant_category() {
+        let input = String::from("N\ny");
+        let output = Vec::new();
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(42));
+        let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
+        let category = ConfigCategory::Even{choices: choices};
+        let mut config = BTreeMap::new();
+        config.insert("things".to_string(), category);
+
+        match engine.pick(&mut config, "does not exist".to_string()) {
+            Ok(_) => {
+                panic!("The non-existant category should have returned an error.");
+            },
+            Err(error) => {
+                assert_eq!(format!("{}", error), "Category does not exist not found in config.");
+            }
+        }
     }
 
     #[test]

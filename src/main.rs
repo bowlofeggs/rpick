@@ -46,7 +46,8 @@ fn main() {
                     rpick::write_config(&config_path, config);
                 },
                 Err(error) => {
-                    panic!(format!("{}", error));
+                    println!("{}", error);
+                    std::process::exit(1);
                 }
             }
         },
