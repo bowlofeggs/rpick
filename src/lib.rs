@@ -289,14 +289,14 @@ pub fn read_config(config_file_path: &String)
 ///
 /// * `config_file_path` - A filesystem path that the config should be written to.
 /// * `config` - The config that should be serialized as YAML.
-pub fn write_config(config_file_path: &String, config: BTreeMap<String, ConfigCategory>) {
-    let f = OpenOptions::new().write(true).create(true).truncate(true).open(
-        &config_file_path);
-    let error_msg = format!("Could not write {}", &config_file_path);
-    let mut f = f.expect(&error_msg);
+pub fn write_config(config_file_path: &String, config: BTreeMap<String, ConfigCategory>) 
+        -> Result<(), Box<error::Error>> {
+    let mut f = OpenOptions::new().write(true).create(true).truncate(true).open(
+        &config_file_path)?;
     let yaml = serde_yaml::to_string(&config).unwrap();
 
-    f.write_all(&yaml.into_bytes()).expect("Could not write {}");
+    f.write_all(&yaml.into_bytes())?;
+    Ok(())
 }
 
 

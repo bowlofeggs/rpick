@@ -43,7 +43,13 @@ fn main() {
             let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
             match engine.pick(&mut config, args.category) {
                 Ok(_) => {
-                    rpick::write_config(&config_path, config);
+                    match rpick::write_config(&config_path, config) {
+                        Ok(_) => {},
+                        Err(error) => {
+                            println!("{}", error);
+                            std::process::exit(1);
+                        }
+                    }
                 },
                 Err(error) => {
                     println!("{}", error);
@@ -52,7 +58,8 @@ fn main() {
             }
         },
         Err(error) => {
-            panic!(format!("{}", error));
+            println!("{}", error);
+            std::process::exit(1);
         }
     }
 }
