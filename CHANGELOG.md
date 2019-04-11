@@ -1,3 +1,16 @@
+# 0.3.0
+
+* [#5](https://gitlab.com/bowlofeggs/rpick/merge_requests/5): Introduced a unit test suite.
+* [#8](https://gitlab.com/bowlofeggs/rpick/merge_requests/8): Defined a library for rpick so
+  integrators can write their own front end to it. This also aided in testing.
+* [#11](https://gitlab.com/bowlofeggs/rpick/merge_requests/11): Added documentation for the library.
+* [#14](https://gitlab.com/bowlofeggs/rpick/merge_requests/14): Users will no longer be re-prompted
+  for a choice they've declined in the same process, unless they decline all possible choices in a
+  category.
+* [d20e491b](https://gitlab.com/bowlofeggs/rpick/commit/d20e491b5971b73dd27d46bae3938f9321272517):
+  Documented installation.
+
+
 # 0.2.0
 
 * [#3](https://gitlab.com/bowlofeggs/rpick/merge_requests/3): Added a new ```even``` distribution
