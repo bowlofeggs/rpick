@@ -97,8 +97,14 @@ where
     ///
     /// let input = String::from("y");
     /// let output = Vec::new();
+    /// // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
+    /// // they each pick the same result for this example.
+    /// #[cfg(target_pointer_width = "64")]
     /// let mut engine = rpick::Engine::new(input.as_bytes(), output,
     ///                                     rand::rngs::SmallRng::seed_from_u64(42));
+    /// #[cfg(target_pointer_width = "32")]
+    /// let mut engine = rpick::Engine::new(input.as_bytes(), output,
+    ///                                     rand::rngs::SmallRng::seed_from_u64(32));
     /// let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
     /// let category = rpick::ConfigCategory::Even{choices: choices};
     /// let mut config = BTreeMap::new();
@@ -437,8 +443,14 @@ mod tests {
     fn test_pick() {
         let input = String::from("N\ny");
         let output = Vec::new();
+        // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
+        // they each pick the same result for this test.
+        #[cfg(target_pointer_width = "64")]
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(42));
+        #[cfg(target_pointer_width = "32")]
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(32));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
         let category = ConfigCategory::Even{choices: choices};
         let mut config = BTreeMap::new();
@@ -476,8 +488,14 @@ mod tests {
     fn test_pick_even() {
         let input = String::from("y");
         let output = Vec::new();
+        // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
+        // they each pick the same result for this test.
+        #[cfg(target_pointer_width = "64")]
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(1));
+        #[cfg(target_pointer_width = "32")]
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(5));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
 
         let result = engine.pick_even(&choices);
@@ -491,8 +509,14 @@ mod tests {
     fn test_pick_gaussian() {
         let input = String::from("y");
         let output = Vec::new();
+        // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
+        // they each pick the same result for this test.
+        #[cfg(target_pointer_width = "64")]
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(1));
+        #[cfg(target_pointer_width = "32")]
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(2));
         let mut choices = vec![
             String::from("this"), String::from("that"), String::from("the other")];
 

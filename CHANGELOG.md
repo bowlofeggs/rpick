@@ -1,3 +1,9 @@
+# 0.3.1
+
+* [#19](https://gitlab.com/bowlofeggs/rpick/merge_requests/19): Adjust the tests to pass on 32-bit
+  architectures.
+
+
 # 0.3.0
 
 * [#5](https://gitlab.com/bowlofeggs/rpick/merge_requests/5): Introduced a unit test suite.
