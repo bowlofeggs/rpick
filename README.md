@@ -198,6 +198,29 @@ activity:
 ```
 
 
+## LRU
+
+The ```lru``` (Least Recently Used) model is a simple ordered FIFO (First In, First Out) list. The
+least recently chosen item is the first item in the list. On each pick, rpick simply picks the
+first item in the list that the user says yes to, and then moves that item to the end of the
+list. It accepts two keys:
+
+* ```model```: This must be set to the string "lru", in order to select this model.
+* ```choices```: This must be a list of strings. The least recently chosen item should be at the
+  beginning of the list.
+
+Example:
+
+```
+code:
+  model: lru
+  choices:
+    - Add a feature
+    - Fix a bug
+    - Write some docs
+```
+
+
 ## Weighted
 
 The ```weighted``` distribution model is a more general version of the ```even``` model that allows

@@ -129,6 +129,9 @@ where
                     ConfigCategory::Lottery { choices } => {
                         Ok(self.pick_lottery(choices))
                     }
+                    ConfigCategory::LRU { choices } => {
+                        Ok(self.pick_lru(choices))
+                    }
                     ConfigCategory::Weighted { choices } => {
                         Ok(self.pick_weighted(choices))
                     }
@@ -203,6 +206,19 @@ where
         value
     }
 
+    /// Run the LRU model for the given choices. When the user accepts a choice, move that choice to
+    /// the end of the choices Vector and return.
+    fn pick_lru(&mut self, choices: &mut Vec<String>) -> String {
+        for (index, choice) in choices.iter().enumerate() {
+            if self.get_consent(&choice[..], choices.len()) {
+                let chosen = choices.remove(index);
+                choices.push(chosen.clone());
+                return chosen;
+            }
+        }
+        // If we've gotten here, the user hasn't made a choice. So… let's do it again!
+        return self.pick_lru(choices);
+    }
 
     /// Run the lottery model for the given choices.
     fn pick_lottery(&mut self, choices: &mut Vec<LotteryChoice>) -> String {
@@ -335,6 +351,17 @@ pub enum ConfigCategory {
     Gaussian {
         #[serde(default = "default_stddev_scaling_factor")]
         stddev_scaling_factor: f64,
+        choices: Vec<String>
+    },
+    /// The LRU variant picks the Least Recently Used item from the list of choices. The least
+    /// recently used choice is found at the beginning of the list. Once a choice has been
+    /// accepted, it is moved to the end of the list.
+    ///
+    /// # Attributes
+    ///
+    /// * `choices` - The list of choices to pick from.
+    #[serde(rename = "lru")]
+    LRU {
         choices: Vec<String>
     },
     /// The Lottery variant uses a weighted distribution to pick items, with each items chances
@@ -524,6 +551,25 @@ mod tests {
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is that. Accept? (Y/n) ");
+        assert_eq!(result, "that");
+        assert_eq!(choices,
+                   vec![String::from("this"), String::from("the other"), String::from("that")]);
+    }
+
+    #[test]
+    fn test_pick_lru() {
+        // The user says no to the first one and yes to the second.
+        let input = String::from("n\ny");
+        let output = Vec::new();
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(1));
+        let mut choices = vec![
+            String::from("this"), String::from("that"), String::from("the other")];
+
+        let result = engine.pick_lru(&mut choices);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) ");
         assert_eq!(result, "that");
         assert_eq!(choices,
                    vec![String::from("this"), String::from("the other"), String::from("that")]);
