@@ -1,3 +1,8 @@
+# 0.4.0
+
+* [#20](https://gitlab.com/bowlofeggs/rpick/merge_requests/20): Add an LRU model.
+
+
 # 0.3.1
 
 * [#19](https://gitlab.com/bowlofeggs/rpick/merge_requests/19): Adjust the tests to pass on 32-bit
