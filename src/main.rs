@@ -69,5 +69,5 @@ fn main() {
 fn get_config_file_path() -> String {
     let config_dir = dirs::config_dir().expect("Unable to find config dir.");
     let config_file = config_dir.join(CONFIG_FILE);
-    return String::from(config_file.to_str().expect("Unable to determine config."));
+    String::from(config_file.to_str().expect("Unable to determine config."))
 }

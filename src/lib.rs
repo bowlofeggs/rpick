@@ -165,7 +165,7 @@ where
             write!(self.output, "🤨\n").expect("Could not write to output");
         }
         self.rejected_choices.push(choice.to_string());
-        return false;
+        false
     }
 
     /// Use an even distribution random model to pick from the given choices.
@@ -217,7 +217,7 @@ where
             }
         }
         // If we've gotten here, the user hasn't made a choice. So… let's do it again!
-        return self.pick_lru(choices);
+        self.pick_lru(choices)
     }
 
     /// Run the lottery model for the given choices.
@@ -301,7 +301,7 @@ pub fn read_config(config_file_path: &String)
     let reader = BufReader::new(f);
 
     let config: BTreeMap<String, ConfigCategory> = serde_yaml::from_reader(reader)?;
-    return Ok(config);
+    Ok(config)
 }
 
 
@@ -420,13 +420,13 @@ pub struct WeightedChoice {
 
 /// Define the default for the stddev_scaling_factor setting as 3.0.
 fn default_stddev_scaling_factor() -> f64 {
-    return 3.0;
+    3.0
 }
 
 
 /// Define the default for the weight setting as 1.
 fn default_weight() -> u64 {
-    return 1;
+    1
 }
 
 
