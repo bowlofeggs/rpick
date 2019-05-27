@@ -73,7 +73,7 @@ where
     /// let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
     /// ```
     pub fn new(input: I, output: O, rng:R) -> Engine<I, O, R> {
-        Engine{input: input, output: output, rng: rng, rejected_choices: Vec::new()}
+        Engine{input, output, rng, rejected_choices: Vec::new()}
     }
 
     /// Pick an item from the [`ConfigCategory`] referenced by the given `category`.
@@ -271,7 +271,7 @@ impl ValueError {
     ///
     /// * `message` - The error message to accompany the ValueError.
     fn new(message: String) -> ValueError {
-        ValueError{message: message}
+        ValueError{message}
     }
 }
 
@@ -479,7 +479,7 @@ mod tests {
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(32));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
-        let category = ConfigCategory::Even{choices: choices};
+        let category = ConfigCategory::Even{choices};
         let mut config = BTreeMap::new();
         config.insert("things".to_string(), category);
 
@@ -497,7 +497,7 @@ mod tests {
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(42));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
-        let category = ConfigCategory::Even{choices: choices};
+        let category = ConfigCategory::Even{choices};
         let mut config = BTreeMap::new();
         config.insert("things".to_string(), category);
 
