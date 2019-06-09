@@ -169,7 +169,7 @@ where
     }
 
     /// Use an even distribution random model to pick from the given choices.
-    fn pick_even(&mut self, choices: &Vec<String>) -> String {
+    fn pick_even(&mut self, choices: &[String]) -> String {
         let choices = choices.iter().map(|x| (x, 1)).collect::<Vec<_>>();
 
         loop {
@@ -243,7 +243,7 @@ where
 
 
     /// Run the weighted model for the given choices.
-    fn pick_weighted(&mut self, choices: &Vec<WeightedChoice>) -> String {
+    fn pick_weighted(&mut self, choices: &[WeightedChoice]) -> String {
         let choices = choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>();
 
         loop {
