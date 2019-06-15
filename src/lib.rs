@@ -162,7 +162,7 @@ where
             // The user has now rejected all choices. Rather than looping forever, we can just clear
             // our rejected choices list and let them go through them all again.
             self.rejected_choices = Vec::new();
-            write!(self.output, "🤨\n").expect("Could not write to output");
+            writeln!(self.output, "🤨").expect("Could not write to output");
         }
         self.rejected_choices.push(choice.to_string());
         false
