@@ -14,7 +14,7 @@ categories = ["command-line-utilities", "games"]
 edition = "2018"
 
 [dependencies]
-dirs = "1.0"
+dirs = "2"
 rand = "0.6"
 serde = {version = "1.0", features = ["derive"]}
 serde_yaml = "0.8"
