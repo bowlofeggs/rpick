@@ -191,13 +191,10 @@ where
 
         loop {
             index = normal.sample(&mut self.rng).abs() as usize;
-            match choices.get(index) {
-                Some(value) => {
-                    if self.get_consent(&value[..], choices.len()) {
-                        break;
-                    }
-                },
-                None => ()
+            if let Some(value) = choices.get(index) {
+                if self.get_consent(&value[..], choices.len()) {
+                    break;
+                }
             }
         }
 
