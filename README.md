@@ -129,6 +129,9 @@ You might want to consult the weather before using ```rpick``` for this use case
 
 ## Gaussian
 
+To understand the Gaussian distribution model, we need to first study
+[this XKCD comic](https://xkcd.com/2118/):
+
 [![XKCD's Normal Distribution](https://imgs.xkcd.com/comics/normal_distribution.png)](https://xkcd.com/2118/)
 
 The ```gaussian``` distribution model is more complex. It uses the
