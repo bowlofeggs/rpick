@@ -602,12 +602,12 @@ mod tests {
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(3));
-        let mut choices = vec![
+        let choices = vec![
             WeightedChoice{name: "this".to_string(), weight: 1},
             WeightedChoice{name: "that".to_string(), weight: 4},
             WeightedChoice{name: "the other".to_string(), weight: 9}];
 
-        let result = engine.pick_weighted(&mut choices);
+        let result = engine.pick_weighted(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is that. Accept? (Y/n) ");
