@@ -455,10 +455,11 @@ mod tests {
 
             let output = String::from_utf8(engine.output).expect("Not UTF-8");
             assert_eq!(output, "Choice is do you want this. Accept? (Y/n) ");
-            let mut expected_rejected_choices: Vec<String> = Vec::new();
-            if !expected_output {
-                expected_rejected_choices = vec![String::from("do you want this")];
-            }
+            let expected_rejected_choices = if !expected_output {
+                vec![String::from("do you want this")]
+            } else {
+                Vec::new()
+            };
             assert_eq!(engine.rejected_choices, expected_rejected_choices);
         }
     }
