@@ -293,7 +293,7 @@ impl error::Error for ValueError {}
 ///
 /// Returns a mapping of YAML to [`ConfigCategory`]'s, or an Error.
 pub fn read_config(config_file_path: &str)
-        -> Result<BTreeMap<String, ConfigCategory>, Box<error::Error>> {
+        -> Result<BTreeMap<String, ConfigCategory>, Box<dyn error::Error>> {
     let f = File::open(&config_file_path)?;
     let reader = BufReader::new(f);
 
@@ -308,8 +308,8 @@ pub fn read_config(config_file_path: &str)
 ///
 /// * `config_file_path` - A filesystem path that the config should be written to.
 /// * `config` - The config that should be serialized as YAML.
-pub fn write_config(config_file_path: &str, config: BTreeMap<String, ConfigCategory>) 
-        -> Result<(), Box<error::Error>> {
+pub fn write_config(config_file_path: &str, config: BTreeMap<String, ConfigCategory>)
+        -> Result<(), Box<dyn error::Error>> {
     let mut f = OpenOptions::new().write(true).create(true).truncate(true).open(
         &config_file_path)?;
     let yaml = serde_yaml::to_string(&config).unwrap();
