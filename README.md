@@ -249,3 +249,16 @@ cereal:
 # Changelog
 
 See the [Changelog](https://gitlab.com/bowlofeggs/rpick/blob/master/CHANGELOG.md).
+
+
+# Contribute
+
+If you would like to contribute to rpick, send me a patch!
+
+There are a few scripts in the ```devel/``` folder that are handy for development, if you have
+podman on your system. To get started with them, run ```build.sh``` (root is not required) -
+it will build a container on your system with podman that gathers and compiles rpick's dependencies.
+Once this container is built, you can run rpick's tests with ```cargo.sh test```, and you can run
+any other cargo command with ```cargo.sh``` (it accepts cargo's parameters).
+
+Happy hacking!
