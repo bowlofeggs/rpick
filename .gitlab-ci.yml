@@ -1,5 +1,11 @@
 image: rust
 
+.only-default: &only-default
+    only:
+        - master
+        - merge_requests
+        - tags
+
 cache:
     key: ${CI_COMMIT_REF_SLUG}
     untracked: true
@@ -13,16 +19,19 @@ before_script:
     - "export CARGO_HOME=.cargo"
 
 cargo build:
+    <<: *only-default
     stage: build
     script:
         - cargo build
 
 cargo doc:
+    <<: *only-default
     stage: test
     script:
         - cargo doc
 
 cargo test:
+    <<: *only-default
     stage: test
     script:
         - cargo test
