@@ -16,7 +16,13 @@ $ sudo dnf module enable rpick:latest
 $ sudo dnf install rpick
 ```
 
-If you are not using Fedora, ```rpick``` is also
+Or in Gentoo:
+
+```
+$ sudo emerge app-misc/rpick
+```
+
+If you are not using Fedora or Gentoo, ```rpick``` is also
 [available on crates.io](https://crates.io/crates/rpick). You can install rpick this way by first
 [installing Rust](https://www.rust-lang.org/tools/install), and then using Rust's cargo tool to
 install rpick:
