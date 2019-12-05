@@ -106,6 +106,16 @@ It added one setting to your restaurant object that wasn't there originally:
 documentation below.
 
 
+# Parameters
+
+The CLI accepts a few parameters:
+
+* ```-c/--config```: This can be used to specify an alternate path for a config file for ```rpick```
+  to use. You can also set the ```RPICK_CONFIG``` environment variable.
+* ```-h/--help```: Print help text.
+* ```-V/--version```: Print the rpick version.
+
+
 # Models
 
 ```rpick``` is capable of a few different algorithms for picking choices: even, gaussian, lottery,
@@ -265,6 +275,7 @@ There are a few scripts in the ```devel/``` folder that are handy for developmen
 podman on your system. To get started with them, run ```build.sh``` (root is not required) -
 it will build a container on your system with podman that gathers and compiles rpick's dependencies.
 Once this container is built, you can run rpick's tests with ```cargo.sh test```, and you can run
-any other cargo command with ```cargo.sh``` (it accepts cargo's parameters).
+any other cargo command with ```cargo.sh``` (it accepts cargo's parameters). The podman development
+environment looks for an rpick config at ```devel/config.yml``` by default.
 
 Happy hacking!

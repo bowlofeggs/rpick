@@ -26,12 +26,15 @@ const CONFIG_FILE: &str = "rpick.yml";
 struct Cli {
     /// The category you wish to pick from.
     category: String,
+    #[structopt(short, long, env = "RPICK_CONFIG")]
+    /// A path to the config file you wish to use.
+    config: Option<String>,
 }
 
 
 fn main() {
     let args = Cli::from_args();
-    let config_path = get_config_file_path();
+    let config_path = get_config_file_path(&args);
     let config = rpick::read_config(&config_path);
     match config {
         Ok(config) => {
@@ -66,8 +69,18 @@ fn main() {
 
 
 /// Return the path to the user's config file.
-fn get_config_file_path() -> String {
-    let config_dir = dirs::config_dir().expect("Unable to find config dir.");
-    let config_file = config_dir.join(CONFIG_FILE);
-    String::from(config_file.to_str().expect("Unable to determine config."))
+///
+/// If the config flag is set in the given CLI args, that path is used. Otherwise, the default
+/// config name (CONFIG_FILE) is appended to the user's home config directory to form the path.
+fn get_config_file_path(args: &Cli) -> String {
+    match &args.config {
+        Some(config) => {
+            config.clone()
+        }
+        None => {
+            let config_dir = dirs::config_dir().expect("Unable to find config dir.");
+            let config_file = config_dir.join(CONFIG_FILE);
+            String::from(config_file.to_str().expect("Unable to determine config."))
+        }
+    }
 }
