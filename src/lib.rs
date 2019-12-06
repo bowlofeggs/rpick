@@ -435,7 +435,7 @@ mod tests {
 
     #[test]
     fn test_defaults() {
-        assert_eq!(default_stddev_scaling_factor(), 3.0);
+        assert!((default_stddev_scaling_factor() - 3.0).abs() < 0.000_001);
         assert_eq!(default_weight(), 1);
     }
 

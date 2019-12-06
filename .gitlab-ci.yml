@@ -24,6 +24,13 @@ cargo build:
     script:
         - cargo build
 
+cargo clippy:
+    <<: *only-default
+    stage: test
+    script:
+        - rustup component add clippy
+        - cargo clippy --all-targets --all-features -- -D warnings
+
 cargo doc:
     <<: *only-default
     stage: test

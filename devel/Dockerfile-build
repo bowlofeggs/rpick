@@ -1,7 +1,7 @@
 FROM registry.fedoraproject.org/fedora:31
 LABEL maintainer="Randy Barlow <bowlofeggs@fedoraproject.org>"
 
-RUN dnf install -y cargo
+RUN dnf install -y cargo clippy
 RUN cargo install cargo-license
 RUN cd /rpick && cargo build
 
