@@ -2,7 +2,13 @@ FROM registry.fedoraproject.org/fedora:31
 LABEL maintainer="Randy Barlow <bowlofeggs@fedoraproject.org>"
 
 RUN dnf install -y cargo clippy
-RUN cargo install cargo-license
+# This way we can cache all the build dependencies
 RUN cd /rpick && cargo build
+# This way we can cache all the development dependencies
+RUN cd /rpick && cargo test
+# This way we can cache all the doc dependencies
+RUN cd /rpick && cargo doc
+# This is useful for finding all the licenses of the bundled libraries
+RUN cargo install cargo-license
 
 CMD ["bash"]
