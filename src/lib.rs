@@ -19,8 +19,8 @@ use std::{error, fmt};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 
-use rand::distributions::{Distribution,Normal};
 use rand::seq::SliceRandom;
+use rand_distr::{Distribution, Normal};
 use serde::{Serialize, Deserialize};
 
 
@@ -186,7 +186,7 @@ where
     /// user accepts a choice, move that choice to end of the choices Vector and return.
     fn pick_gaussian(&mut self, choices: &mut Vec<String>, stddev_scaling_factor: f64) -> String {
         let stddev = (choices.len() as f64) / stddev_scaling_factor;
-        let normal = Normal::new(0.0, stddev);
+        let normal = Normal::new(0.0, stddev).unwrap();
         let mut index;
 
         loop {
