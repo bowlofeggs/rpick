@@ -1,3 +1,9 @@
+# 0.5.0
+
+* [#27](https://gitlab.com/bowlofeggs/rpick/merge_requests/27): Add a ```--config``` flag that
+  allows users to specify a path to rpick's config file.
+
+
 # 0.4.0
 
 * [#20](https://gitlab.com/bowlofeggs/rpick/merge_requests/20): Add an LRU model.
