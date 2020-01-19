@@ -35,13 +35,10 @@ use serde::{Serialize, Deserialize};
 ///              prompt the user to accept a choice.
 /// * `rng` - This must be a random number generator that implements the [`rand::RngCore`]
 ///           trait.
-/// * `rejected_choices` - A list of choices the user has rejected. We maintain this so we don't
-///                        ask again about a choice they've already declined.
 pub struct Engine<I, O, R> {
     input: I,
     output: O,
     rng: R,
-    rejected_choices: Vec<String>
 }
 
 
@@ -73,7 +70,7 @@ where
     /// let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
     /// ```
     pub fn new(input: I, output: O, rng:R) -> Engine<I, O, R> {
-        Engine{input, output, rng, rejected_choices: Vec::new()}
+        Engine{input, output, rng}
     }
 
     /// Pick an item from the [`ConfigCategory`] referenced by the given `category`.
@@ -144,13 +141,14 @@ where
         }
     }
 
+    /// Express disapproval to the user.
+    fn express_disapproval(&mut self) {
+        writeln!(self.output, "🤨").expect("Could not write to output");
+    }
+
     /// Prompt the user for consent for the given choice, returning a bool true if they accept the
     /// choice, or false if they do not.
-    fn get_consent(&mut self, choice: &str, num_choices: usize) -> bool {
-        if self.rejected_choices.contains(&choice.to_string()) {
-            return false;
-        }
-
+    fn get_consent(&mut self, choice: &str) -> bool {
         write!(self.output, "Choice is {}. Accept? (Y/n) ", choice).expect(
             "Could not write to output");
         self.output.flush().unwrap();
@@ -158,25 +156,27 @@ where
         if ["", "y", "Y"].contains(&line1.as_str()) {
             return true;
         }
-        if self.rejected_choices.len() + 1 >= num_choices {
-            // The user has now rejected all choices. Rather than looping forever, we can just clear
-            // our rejected choices list and let them go through them all again.
-            self.rejected_choices = Vec::new();
-            writeln!(self.output, "🤨").expect("Could not write to output");
-        }
-        self.rejected_choices.push(choice.to_string());
         false
     }
 
     /// Use an even distribution random model to pick from the given choices.
     fn pick_even(&mut self, choices: &[String]) -> String {
-        let choices = choices.iter().map(|x| (x, 1)).collect::<Vec<_>>();
+        let initialize_candidates = || {
+            choices.iter().map(|x| (x, 1)).collect::<Vec<_>>()
+        };
+        let mut candidates = initialize_candidates();
 
         loop {
-            let choice = choices.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
+            let candidate = candidates.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
 
-            if self.get_consent(choice, choices.len()) {
-                return choice.clone();
+            if self.get_consent(candidate) {
+                return candidate.clone();
+            } else if candidates.len() > 1 {
+                let index = candidates.iter().position(|x| x.0 == candidate).unwrap();
+                candidates.remove(index);
+            } else {
+                self.express_disapproval();
+                candidates = initialize_candidates();
             }
         }
     }
@@ -185,15 +185,24 @@ where
     /// Run the gaussian model for the given choices and standard deviation scaling factor. When the
     /// user accepts a choice, move that choice to end of the choices Vector and return.
     fn pick_gaussian(&mut self, choices: &mut Vec<String>, stddev_scaling_factor: f64) -> String {
-        let stddev = (choices.len() as f64) / stddev_scaling_factor;
-        let normal = Normal::new(0.0, stddev).unwrap();
+        let mut candidates = choices.clone();
         let mut index;
 
         loop {
+            let stddev = (candidates.len() as f64) / stddev_scaling_factor;
+            let normal = Normal::new(0.0, stddev).unwrap();
             index = normal.sample(&mut self.rng).abs() as usize;
-            if let Some(value) = choices.get(index) {
-                if self.get_consent(&value[..], choices.len()) {
+
+            if let Some(value) = candidates.get(index) {
+                if self.get_consent(&value[..]) {
+                    index = choices.iter().position(|x| x == value).unwrap();
                     break;
+                } else if candidates.len() > 1 {
+                    index = candidates.iter().position(|x| x == value).unwrap();
+                    candidates.remove(index);
+                } else {
+                    self.express_disapproval();
+                    candidates = choices.clone();
                 }
             }
         }
@@ -207,27 +216,36 @@ where
     /// the end of the choices Vector and return.
     fn pick_lru(&mut self, choices: &mut Vec<String>) -> String {
         for (index, choice) in choices.iter().enumerate() {
-            if self.get_consent(&choice[..], choices.len()) {
+            if self.get_consent(&choice[..]) {
                 let chosen = choices.remove(index);
                 choices.push(chosen.clone());
                 return chosen;
             }
         }
+        self.express_disapproval();
         // If we've gotten here, the user hasn't made a choice. So… let's do it again!
         self.pick_lru(choices)
     }
 
     /// Run the lottery model for the given choices.
     fn pick_lottery(&mut self, choices: &mut Vec<LotteryChoice>) -> String {
-        let weighted_choices = choices.iter().enumerate().map(
-            |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>();
+        let initialize_candidates = || {
+            choices.iter().enumerate().filter(|x| x.1.tickets > 0).map(
+                |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>()
+        };
+        let mut candidates = initialize_candidates();
 
         let index = loop {
-            let (index, choice) = weighted_choices.choose_weighted(
+            let (_, choice) = candidates.choose_weighted(
                 &mut self.rng, |item| item.1).unwrap().0;
 
-            if self.get_consent(&choice[..], choices.len()) {
-                break index;
+            if self.get_consent(&choice[..]) {
+                break choices.iter().position(|x| &x.name == choice).unwrap();
+            } else if candidates.len() > 1 {
+                candidates.remove(candidates.iter().position(|x| (x.0).1 == choice).unwrap());
+            } else {
+                self.express_disapproval();
+                candidates = initialize_candidates();
             }
         };
 
@@ -241,13 +259,21 @@ where
 
     /// Run the weighted model for the given choices.
     fn pick_weighted(&mut self, choices: &[WeightedChoice]) -> String {
-        let choices = choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>();
+        let initialize_candidates = || {
+            choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>()
+        };
+        let mut candidates = initialize_candidates();
 
         loop {
-            let choice = choices.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
+            let choice = candidates.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
 
-            if self.get_consent(&choice[..], choices.len()) {
+            if self.get_consent(&choice[..]) {
                 return choice.clone();
+            } else if candidates.len() > 1 {
+                candidates.remove(candidates.iter().position(|x| x.0 == choice).unwrap());
+            } else {
+                self.express_disapproval();
+                candidates = initialize_candidates();
             }
         }
     }
@@ -451,16 +477,10 @@ mod tests {
             let mut engine = Engine::new(input.as_bytes(), output,
                                          rand::rngs::SmallRng::seed_from_u64(42));
 
-            assert_eq!(engine.get_consent("do you want this", 2), *expected_output);
+            assert_eq!(engine.get_consent("do you want this"), *expected_output);
 
             let output = String::from_utf8(engine.output).expect("Not UTF-8");
             assert_eq!(output, "Choice is do you want this. Accept? (Y/n) ");
-            let expected_rejected_choices = if !expected_output {
-                vec![String::from("do you want this")]
-            } else {
-                Vec::new()
-            };
-            assert_eq!(engine.rejected_choices, expected_rejected_choices);
         }
     }
 
@@ -597,6 +617,34 @@ mod tests {
                 LotteryChoice{name: "the other".to_string(), tickets: 0, weight: 9}]);
     }
 
+    /// If the user says no to all the choices, rpick should print out an emoji and start over.
+    /// There was previously a bug where the pick would loop forever if one of the options had 0
+    /// chance of being picked.
+    #[test]
+    fn test_pick_lottery_no_to_all_one_no_chance() {
+        let input = String::from("n\nn\nn\ny\n");
+        let output = Vec::new();
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(2));
+        let mut choices = vec![
+            LotteryChoice{name: "this".to_string(), tickets: 0, weight: 1},
+            LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
+            LotteryChoice{name: "the other".to_string(), tickets:3, weight: 9}];
+
+        let result = engine.pick_lottery(&mut choices);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is the other. Accept? (Y/n) Choice is that. Accept? (Y/n) 🤨\n\
+                            Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+        assert_eq!(result, "the other");
+        assert_eq!(
+            choices,
+            vec![
+                LotteryChoice{name: "this".to_string(), tickets: 1, weight: 1},
+                LotteryChoice{name: "that".to_string(), tickets: 6, weight: 4},
+                LotteryChoice{name: "the other".to_string(), tickets: 0, weight: 9}]);
+    }
+
     #[test]
     fn test_pick_weighted() {
         let input = String::from("y");
@@ -612,6 +660,27 @@ mod tests {
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is that. Accept? (Y/n) ");
+        assert_eq!(result, "that");
+    }
+
+    /// There was a bug wherein saying no to all weighted options crashed rpick rather than
+    /// expressing disapproval.
+    #[test]
+    fn test_pick_weighted_no_to_all() {
+        let input = String::from("n\nn\nn\ny\n");
+        let output = Vec::new();
+        let mut engine = Engine::new(input.as_bytes(), output,
+                                     rand::rngs::SmallRng::seed_from_u64(3));
+        let choices = vec![
+            WeightedChoice{name: "this".to_string(), weight: 1},
+            WeightedChoice{name: "that".to_string(), weight: 4},
+            WeightedChoice{name: "the other".to_string(), weight: 9}];
+
+        let result = engine.pick_weighted(&choices);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) \
+                            Choice is this. Accept? (Y/n) 🤨\nChoice is that. Accept? (Y/n) ");
         assert_eq!(result, "that");
     }
 }
