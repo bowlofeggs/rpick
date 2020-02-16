@@ -9,10 +9,9 @@ visited getting a boost in their chances.
 
 # Install
 
-You can install ```rpick``` in Fedora by enabling its module:
+You can install ```rpick``` in Fedora:
 
 ```
-$ sudo dnf module enable rpick:latest
 $ sudo dnf install rpick
 ```
 
