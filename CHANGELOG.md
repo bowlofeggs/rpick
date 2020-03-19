@@ -1,3 +1,9 @@
+# 0.5.1
+
+* [#32](https://gitlab.com/bowlofeggs/rpick/-/merge_requests/32): Fix an infinite loop when users
+  say no to all possible choices when there are items in the list with no chance of being chosen.
+
+
 # 0.5.0
 
 * [#27](https://gitlab.com/bowlofeggs/rpick/merge_requests/27): Add a ```--config``` flag that
