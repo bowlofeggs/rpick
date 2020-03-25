@@ -456,8 +456,35 @@ fn default_weight() -> u64 {
 #[cfg(test)]
 mod tests {
     use rand::SeedableRng;
+    use rand_core;
 
     use super::*;
+
+    struct FakeRng(u32);
+
+    /// This allows our tests to have predictable results, and to have the same predictable results
+    /// on both 32-bit and 64-bit architectures. This is used for all tests except for the Gaussian
+    /// tests, since those do behave differently between 32-bit and 64-bit systems when using this
+    /// rng.
+    impl rand::RngCore for FakeRng {
+        fn next_u32(&mut self) -> u32 {
+            self.0 += 1;
+            self.0 - 1
+        }
+
+        fn next_u64(&mut self) -> u64 {
+            self.next_u32() as u64
+        }
+
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            rand_core::impls::fill_bytes_via_next(self, dest)
+        }
+
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand_core::Error> {
+            self.fill_bytes(dest);
+            Ok(())
+        }
+    }
 
     #[test]
     fn test_defaults() {
@@ -474,8 +501,7 @@ mod tests {
 
         for (input, expected_output) in tests.iter() {
             let output = Vec::new();
-            let mut engine = Engine::new(input.as_bytes(), output,
-                                         rand::rngs::SmallRng::seed_from_u64(42));
+            let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
 
             assert_eq!(engine.get_consent("do you want this"), *expected_output);
 
@@ -488,14 +514,7 @@ mod tests {
     fn test_pick() {
         let input = String::from("N\ny");
         let output = Vec::new();
-        // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
-        // they each pick the same result for this test.
-        #[cfg(target_pointer_width = "64")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(42));
-        #[cfg(target_pointer_width = "32")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(32));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
         let category = ConfigCategory::Even{choices};
         let mut config = BTreeMap::new();
@@ -503,17 +522,16 @@ mod tests {
 
         let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
 
-        assert_eq!(choice, "the other");
+        assert_eq!(choice, "that");
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) ");
     }
 
     #[test]
     fn test_pick_nonexistant_category() {
         let input = String::from("N\ny");
         let output = Vec::new();
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(42));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
         let category = ConfigCategory::Even{choices};
         let mut config = BTreeMap::new();
@@ -533,29 +551,28 @@ mod tests {
     fn test_pick_even() {
         let input = String::from("y");
         let output = Vec::new();
-        // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
-        // they each pick the same result for this test.
-        #[cfg(target_pointer_width = "64")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(1));
-        #[cfg(target_pointer_width = "32")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(5));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
 
         let result = engine.pick_even(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is the other. Accept? (Y/n) ");
-        assert_eq!(result, "the other");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) ");
+        assert_eq!(result, "this");
     }
 
     #[test]
     fn test_pick_gaussian() {
         let input = String::from("y");
         let output = Vec::new();
-        // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
-        // they each pick the same result for this test.
+        // Unfortunately, the FakeRng we wrote above causes the Gaussian distribution to often
+        // pick outside of the distribution for 32-bit values on 64-bit systems. Since it is a
+        // u32, this means that the user saying no here will make the implementation loop forever
+        // until it hits MAXINT on 64-bit systems. If we made the FakeRng be a 64 bit value, then
+        // the test results on 32-bit systems would overflow. Ideally we'd have a better way than
+        // the below to get consistent test results between 32-bit and 64-bit systems, but for now
+        // this works OK. We seed the engine differently for 32-bit architectures than for
+        // 64-bit so that they each pick the same result for this test.
         #[cfg(target_pointer_width = "64")]
         let mut engine = Engine::new(input.as_bytes(), output,
                                      rand::rngs::SmallRng::seed_from_u64(1));
@@ -579,8 +596,7 @@ mod tests {
         // The user says no to the first one and yes to the second.
         let input = String::from("n\ny");
         let output = Vec::new();
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(1));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
             String::from("this"), String::from("that"), String::from("the other")];
 
@@ -597,8 +613,7 @@ mod tests {
     fn test_pick_lottery() {
         let input = String::from("y");
         let output = Vec::new();
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(2));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
             LotteryChoice{name: "this".to_string(), tickets: 1, weight: 1},
             LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
@@ -607,14 +622,14 @@ mod tests {
         let result = engine.pick_lottery(&mut choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is the other. Accept? (Y/n) ");
-        assert_eq!(result, "the other");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) ");
+        assert_eq!(result, "this");
         assert_eq!(
             choices,
             vec![
-                LotteryChoice{name: "this".to_string(), tickets: 2, weight: 1},
+                LotteryChoice{name: "this".to_string(), tickets: 0, weight: 1},
                 LotteryChoice{name: "that".to_string(), tickets: 6, weight: 4},
-                LotteryChoice{name: "the other".to_string(), tickets: 0, weight: 9}]);
+                LotteryChoice{name: "the other".to_string(), tickets: 12, weight: 9}]);
     }
 
     /// If the user says no to all the choices, rpick should print out an emoji and start over.
@@ -624,8 +639,7 @@ mod tests {
     fn test_pick_lottery_no_to_all_one_no_chance() {
         let input = String::from("n\nn\nn\ny\n");
         let output = Vec::new();
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(2));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
             LotteryChoice{name: "this".to_string(), tickets: 0, weight: 1},
             LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
@@ -634,7 +648,7 @@ mod tests {
         let result = engine.pick_lottery(&mut choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is the other. Accept? (Y/n) Choice is that. Accept? (Y/n) 🤨\n\
+        assert_eq!(output, "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) 🤨\n\
                             Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
         assert_eq!(result, "the other");
         assert_eq!(
@@ -649,8 +663,7 @@ mod tests {
     fn test_pick_weighted() {
         let input = String::from("y");
         let output = Vec::new();
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(3));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![
             WeightedChoice{name: "this".to_string(), weight: 1},
             WeightedChoice{name: "that".to_string(), weight: 4},
@@ -659,8 +672,8 @@ mod tests {
         let result = engine.pick_weighted(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is that. Accept? (Y/n) ");
-        assert_eq!(result, "that");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) ");
+        assert_eq!(result, "this");
     }
 
     /// There was a bug wherein saying no to all weighted options crashed rpick rather than
@@ -669,8 +682,7 @@ mod tests {
     fn test_pick_weighted_no_to_all() {
         let input = String::from("n\nn\nn\ny\n");
         let output = Vec::new();
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(3));
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![
             WeightedChoice{name: "this".to_string(), weight: 1},
             WeightedChoice{name: "that".to_string(), weight: 4},
@@ -679,8 +691,8 @@ mod tests {
         let result = engine.pick_weighted(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) \
-                            Choice is this. Accept? (Y/n) 🤨\nChoice is that. Accept? (Y/n) ");
-        assert_eq!(result, "that");
+        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) \
+                            Choice is the other. Accept? (Y/n) 🤨\nChoice is this. Accept? (Y/n) ");
+        assert_eq!(result, "this");
     }
 }

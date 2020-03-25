@@ -307,6 +307,7 @@ version = "0.5.1"
 dependencies = [
  "dirs",
  "rand",
+ "rand_core",
  "rand_distr",
  "serde",
  "serde_yaml",
