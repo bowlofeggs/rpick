@@ -21,12 +21,21 @@ Or in Gentoo:
 $ sudo emerge app-misc/rpick
 ```
 
-If you are not using Fedora or Gentoo, ```rpick``` is also
+Or in MacOS, assuming you have installed [brew](https://brew.sh/):
+
+```
+$ brew install rust
+# Be sure to read the output of this command and adjust your PATH as instructed.
+$ cargo install rpick
+```
+
+If you are not using one of the systems described above, ```rpick``` is also
 [available on crates.io](https://crates.io/crates/rpick). You can install rpick this way by first
 [installing Rust](https://www.rust-lang.org/tools/install), and then using Rust's cargo tool to
 install rpick:
 
 ```
+# Be sure to read the output of this command and adjust your PATH as instructed.
 $ cargo install rpick
 ```
 
@@ -35,7 +44,8 @@ $ cargo install rpick
 
 ```rpick``` keeps its state in a [YAML](https://yaml.org/) file in your home config directory called
 ```rpick.yml```. For now, users must create this file by hand, and ```rpick``` will manage it from
-there. To get started with some examples, create ```~/.config/rpick.yml``` like this:
+there. To get started with some examples, create ```~/.config/rpick.yml``` in Linux, or
+```~/Library/Preferences/rpick.yml``` on MacOS, like this:
 
 ```
 ---
