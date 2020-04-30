@@ -44,8 +44,9 @@ $ cargo install rpick
 
 ```rpick``` keeps its state in a [YAML](https://yaml.org/) file in your home config directory called
 ```rpick.yml```. For now, users must create this file by hand, and ```rpick``` will manage it from
-there. To get started with some examples, create ```~/.config/rpick.yml``` in Linux, or
-```~/Library/Preferences/rpick.yml``` on MacOS, like this:
+there. To get started with some examples, create ```~/.config/rpick.yml``` in Linux,
+```~/Library/Preferences/rpick.yml``` on MacOS, or ```C:\Users\Alice\AppData\Roaming\rpick.yml``` on
+Windows, like this:
 
 ```
 ---
