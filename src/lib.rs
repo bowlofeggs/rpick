@@ -456,7 +456,6 @@ fn default_weight() -> u64 {
 #[cfg(test)]
 mod tests {
     use rand::SeedableRng;
-    use rand_core;
 
     use super::*;
 
