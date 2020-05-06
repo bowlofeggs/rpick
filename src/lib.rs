@@ -123,6 +123,9 @@ where
                     ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
                         Ok(self.pick_gaussian(choices, *stddev_scaling_factor))
                     }
+                    ConfigCategory::Inventory { choices } => {
+                        Ok(self.pick_inventory(choices))
+                    }
                     ConfigCategory::Lottery { choices } => {
                         Ok(self.pick_lottery(choices))
                     }
@@ -210,6 +213,32 @@ where
         let value = choices.remove(index);
         choices.push(value.clone());
         value
+    }
+
+    /// Run the inventory model for the given choices.
+    fn pick_inventory(&mut self, choices: &mut Vec<InventoryChoice>) -> String {
+        let initialize_candidates = || {
+            choices.iter().enumerate().filter(|x| x.1.tickets > 0).map(
+                |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>()
+        };
+        let mut candidates = initialize_candidates();
+
+        let index = loop {
+            let (_, choice) = candidates.choose_weighted(
+                &mut self.rng, |item| item.1).unwrap().0;
+
+            if self.get_consent(&choice[..]) {
+                break choices.iter().position(|x| &x.name == choice).unwrap();
+            } else if candidates.len() > 1 {
+                candidates.remove(candidates.iter().position(|x| (x.0).1 == choice).unwrap());
+            } else {
+                self.express_disapproval();
+                candidates = initialize_candidates();
+            }
+        };
+
+        choices[index].tickets -= 1;
+        choices[index].name.clone()
     }
 
     /// Run the LRU model for the given choices. When the user accepts a choice, move that choice to
@@ -376,6 +405,16 @@ pub enum ConfigCategory {
         stddev_scaling_factor: f64,
         choices: Vec<String>
     },
+    /// The Inventory variant uses a weighted distribution to pick items, with each items chances
+    /// being tied to how many tickets it has. When a choice is accepted, that choice's ticket
+    /// count is reduced by 1.
+    ///
+    /// # Attributes
+    ///
+    /// * `choices` - The list of choices to pick from.
+    Inventory {
+        choices: Vec<InventoryChoice>
+    },
     /// The LRU variant picks the Least Recently Used item from the list of choices. The least
     /// recently used choice is found at the beginning of the list. Once a choice has been
     /// accepted, it is moved to the end of the list.
@@ -405,6 +444,21 @@ pub enum ConfigCategory {
     Weighted {
         choices: Vec<WeightedChoice>
     }
+}
+
+
+/// Represents an individual choice for the inventory model.
+///
+/// # Attributes
+///
+/// * `name` - The name of the choice.
+/// * `tickets` - The current number of tickets the choice has.
+#[derive(Debug)]
+#[derive(PartialEq, Serialize, Deserialize)]
+pub struct InventoryChoice {
+    name: String,
+    #[serde(default = "default_weight")]
+    tickets: u64,
 }
 
 
@@ -588,6 +642,30 @@ mod tests {
         assert_eq!(result, "that");
         assert_eq!(choices,
                    vec![String::from("this"), String::from("the other"), String::from("that")]);
+    }
+
+    #[test]
+    fn test_pick_inventory() {
+        let input = String::from("n\nn\nn\ny\n");
+        let output = Vec::new();
+        let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
+        let mut choices = vec![
+            InventoryChoice{name: "this".to_string(), tickets: 0},
+            InventoryChoice{name: "that".to_string(), tickets: 2},
+            InventoryChoice{name: "the other".to_string(), tickets: 3}];
+
+        let result = engine.pick_inventory(&mut choices);
+
+        let output = String::from_utf8(engine.output).expect("Not UTF-8");
+        assert_eq!(output, "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) 🤨\n\
+                            Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+        assert_eq!(result, "the other");
+        assert_eq!(
+            choices,
+            vec![
+                InventoryChoice{name: "this".to_string(), tickets: 0},
+                InventoryChoice{name: "that".to_string(), tickets: 2},
+                InventoryChoice{name: "the other".to_string(), tickets: 2}]);
     }
 
     #[test]

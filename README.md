@@ -128,8 +128,8 @@ The CLI accepts a few parameters:
 
 # Models
 
-```rpick``` is capable of a few different algorithms for picking choices: even, gaussian, lottery,
-lru, and weighted.
+```rpick``` is capable of a few different algorithms for picking choices: even, gaussian, inventory,
+lottery, lru, and weighted.
 
 
 ## Even
@@ -198,11 +198,37 @@ sequentially and a default ```stddev_scaling_factor``` of ```3.0```:
 ![Gaussian example](https://gitlab.com/bowlofeggs/rpick/uploads/a4d6004d95754d350cd6b5648de2c5e2/Figure_1.png)
 
 
+## Inventory
+
+The ```inventory``` distribution model is a dynamic version of the ```weighted``` model. Each of the
+choices has a certain number of lottery tickets that influence how likely they are to be picked that
+round. Once an item is picked, it loses one ticket, i.e., dropping the inventory of that particular
+item by one. It accepts two keys:
+
+* ```model```: This must be set to the string "inventory", in order to select this model.
+* ```choices```: This must be a list of objects. Each object accepts three keys:
+  - ```name```: This is required, and is the name of the choice.
+  - ```tickets```: The current number of lottery tickets that this choice has. This is optional, an
+    integer, and defaults to 1.
+
+Example:
+
+```
+tea:
+  model: inventory
+  choices:
+    - name: "Tea… Earl Grey… Hot"
+	  tickets: 15
+    - name: Black
+	  tickets: 2
+```
+
+
 ## Lottery
 
-The ```lottery``` distribution model is a dynamic version of the ```weighted``` model. Each of the
-choices has a certain number of lottery tickets that influence how likely they are to be picked that
-round. Once an item is picked, it loses all of its lottery tickets and every choice that wasn't
+The ```lottery``` distribution model is also a dynamic version of the ```weighted``` model. Each of
+the choices has a certain number of lottery tickets that influence how likely they are to be picked
+that round. Once an item is picked, it loses all of its lottery tickets and every choice that wasn't
 picked gains more lottery tickets. It accepts three keys:
 
 * ```model```: This must be set to the string "lottery", in order to select this model.
