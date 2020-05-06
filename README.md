@@ -129,7 +129,7 @@ The CLI accepts a few parameters:
 # Models
 
 ```rpick``` is capable of a few different algorithms for picking choices: even, gaussian, lottery,
-and weighted.
+lru, and weighted.
 
 
 ## Even
