@@ -42,7 +42,7 @@ pub struct Engine<I, O, R> {
 }
 
 
-impl<I, O, R> Engine<I, O, R>
+impl<'a, I, O, R> Engine<I, O, R>
 where
     I: BufRead,
     O: Write,
@@ -109,7 +109,7 @@ where
     ///
     /// let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
     ///
-    /// assert_eq!(choice, "this");
+    /// assert_eq!(choice, "that");
     /// ```
     pub fn pick(&mut self, config: &mut BTreeMap<String, ConfigCategory>, category: String)
             -> Result<String, Box<dyn error::Error>> {
@@ -165,23 +165,12 @@ where
     /// Use an even distribution random model to pick from the given choices.
     fn pick_even(&mut self, choices: &[String]) -> String {
         let initialize_candidates = || {
-            choices.iter().map(|x| (x, 1)).collect::<Vec<_>>()
+            choices.iter().enumerate().map(|x| ((x.0, x.1), 1)).collect::<Vec<_>>()
         };
-        let mut candidates = initialize_candidates();
 
-        loop {
-            let candidate = candidates.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
+        let index = self.pick_weighted_common(&initialize_candidates);
 
-            if self.get_consent(candidate) {
-                return candidate.clone();
-            } else if candidates.len() > 1 {
-                let index = candidates.iter().position(|x| x.0 == candidate).unwrap();
-                candidates.remove(index);
-            } else {
-                self.express_disapproval();
-                candidates = initialize_candidates();
-            }
-        }
+        choices[index].clone()
     }
 
 
@@ -221,21 +210,8 @@ where
             choices.iter().enumerate().filter(|x| x.1.tickets > 0).map(
                 |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>()
         };
-        let mut candidates = initialize_candidates();
 
-        let index = loop {
-            let (_, choice) = candidates.choose_weighted(
-                &mut self.rng, |item| item.1).unwrap().0;
-
-            if self.get_consent(&choice[..]) {
-                break choices.iter().position(|x| &x.name == choice).unwrap();
-            } else if candidates.len() > 1 {
-                candidates.remove(candidates.iter().position(|x| (x.0).1 == choice).unwrap());
-            } else {
-                self.express_disapproval();
-                candidates = initialize_candidates();
-            }
-        };
+        let index = self.pick_weighted_common(&initialize_candidates);
 
         choices[index].tickets -= 1;
         choices[index].name.clone()
@@ -262,21 +238,8 @@ where
             choices.iter().enumerate().filter(|x| x.1.tickets > 0).map(
                 |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>()
         };
-        let mut candidates = initialize_candidates();
 
-        let index = loop {
-            let (_, choice) = candidates.choose_weighted(
-                &mut self.rng, |item| item.1).unwrap().0;
-
-            if self.get_consent(&choice[..]) {
-                break choices.iter().position(|x| &x.name == choice).unwrap();
-            } else if candidates.len() > 1 {
-                candidates.remove(candidates.iter().position(|x| (x.0).1 == choice).unwrap());
-            } else {
-                self.express_disapproval();
-                candidates = initialize_candidates();
-            }
-        };
+        let index = self.pick_weighted_common(&initialize_candidates);
 
         for choice in choices.iter_mut() {
             choice.tickets += choice.weight;
@@ -285,21 +248,37 @@ where
         choices[index].name.clone()
     }
 
-
     /// Run the weighted model for the given choices.
     fn pick_weighted(&mut self, choices: &[WeightedChoice]) -> String {
         let initialize_candidates = || {
-            choices.iter().map(|x| (&x.name, x.weight)).collect::<Vec<_>>()
+            choices.iter().enumerate().map(|x| ((x.0, &x.1.name), x.1.weight)).collect::<Vec<_>>()
         };
+
+        let index = self.pick_weighted_common(&initialize_candidates);
+
+        choices[index].name.clone()
+    }
+
+    /// A common weighted choice algorithm used as the core of many models.
+    ///
+    /// The initialize_candidates() function should return a Vector of 2-tuples. The first element
+    /// of the 2-tuple is also a 2-tuple, specifying the original index of the choice and the human
+    /// readable name of the choice. The second element of the outer 2-tuple should express the
+    /// weight of that choice. For example, if the first choice is "ice cream" and has a weight of
+    /// 5, the data structure would look like this: ((0, "ice cream"), 5)
+    fn pick_weighted_common(
+            &mut self,
+            initialize_candidates: &dyn Fn() -> Vec<((usize, &'a String), u64)>) -> usize {
         let mut candidates = initialize_candidates();
 
         loop {
-            let choice = candidates.choose_weighted(&mut self.rng, |item| item.1).unwrap().0;
+            let (index, choice) = candidates.choose_weighted(
+                &mut self.rng, |item| item.1).unwrap().0;
 
             if self.get_consent(&choice[..]) {
-                return choice.clone();
+                break index;
             } else if candidates.len() > 1 {
-                candidates.remove(candidates.iter().position(|x| x.0 == choice).unwrap());
+                candidates.remove(candidates.iter().position(|x| (x.0).1 == choice).unwrap());
             } else {
                 self.express_disapproval();
                 candidates = initialize_candidates();
