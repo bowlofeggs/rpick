@@ -1,3 +1,9 @@
+# 0.6.0
+
+* [#39](https://gitlab.com/bowlofeggs/rpick/-/merge_requests/39): Add a new inventory model.
+* Documented how to install and use rpick on MacOS and Windows.
+
+
 # 0.5.1
 
 * [#32](https://gitlab.com/bowlofeggs/rpick/-/merge_requests/32): Fix an infinite loop when users
