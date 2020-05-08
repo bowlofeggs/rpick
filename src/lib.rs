@@ -88,28 +88,28 @@ where
     /// # Example
     ///
     /// ```
-    /// use std::collections::BTreeMap;
-    ///
-    /// use rand::SeedableRng;
-    ///
-    /// let input = String::from("y");
-    /// let output = Vec::new();
-    /// // We need to seed the engine differently for 32-bit architectures than for 64-bit so that
-    /// // they each pick the same result for this example.
+    /// // 32-bit architectures have different PRNG results than 64-bit architectures, so we will
+    /// // only run this example on 64-bit systems.
     /// #[cfg(target_pointer_width = "64")]
-    /// let mut engine = rpick::Engine::new(input.as_bytes(), output,
-    ///                                     rand::rngs::SmallRng::seed_from_u64(42));
-    /// #[cfg(target_pointer_width = "32")]
-    /// let mut engine = rpick::Engine::new(input.as_bytes(), output,
-    ///                                     rand::rngs::SmallRng::seed_from_u64(32));
-    /// let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
-    /// let category = rpick::ConfigCategory::Even{choices: choices};
-    /// let mut config = BTreeMap::new();
-    /// config.insert("things".to_string(), category);
+    /// {
+    ///     use std::collections::BTreeMap;
     ///
-    /// let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+    ///     use rand::SeedableRng;
     ///
-    /// assert_eq!(choice, "that");
+    ///     let input = String::from("y");
+    ///     let output = Vec::new();
+    ///     let mut engine = rpick::Engine::new(input.as_bytes(), output,
+    ///                                         rand::rngs::SmallRng::seed_from_u64(42));
+    ///     let choices = vec![String::from("this"), String::from("that"),
+    ///                        String::from("the other")];
+    ///     let category = rpick::ConfigCategory::Even{choices: choices};
+    ///     let mut config = BTreeMap::new();
+    ///     config.insert("things".to_string(), category);
+    ///
+    ///     let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+    ///
+    ///     assert_eq!(choice, "that");
+    /// }
     /// ```
     pub fn pick(&mut self, config: &mut BTreeMap<String, ConfigCategory>, category: String)
             -> Result<String, Box<dyn error::Error>> {
