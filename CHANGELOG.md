@@ -1,3 +1,8 @@
+# 0.6.1
+
+* Update Cargo.lock to get new dependencies.
+
+
 # 0.6.0
 
 * [#39](https://gitlab.com/bowlofeggs/rpick/-/merge_requests/39): Add a new inventory model.
