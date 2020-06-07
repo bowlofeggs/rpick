@@ -218,9 +218,9 @@ tea:
   model: inventory
   choices:
     - name: "Tea… Earl Grey… Hot"
-	  tickets: 15
+      tickets: 15
     - name: Black
-	  tickets: 2
+      tickets: 2
 ```
 
 
