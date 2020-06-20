@@ -123,6 +123,7 @@ The CLI accepts a few parameters:
 * ```-c/--config```: This can be used to specify an alternate path for a config file for ```rpick```
   to use. You can also set the ```RPICK_CONFIG``` environment variable.
 * ```-h/--help```: Print help text.
+* ```-v/--verbose```: Print more information about the pick.
 * ```-V/--version```: Print the rpick version.
 
 

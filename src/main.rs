@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 use std::io;
 
 use structopt::StructOpt;
+use term::Terminal;
 
 
 const CONFIG_FILE: &str = "rpick.yml";
@@ -29,6 +30,9 @@ struct Cli {
     #[structopt(short, long, env = "RPICK_CONFIG")]
     /// A path to the config file you wish to use.
     config: Option<String>,
+    #[structopt(short, long)]
+    /// Print more information about the pick.
+    verbose: bool
 }
 
 
@@ -41,9 +45,15 @@ fn main() {
             let mut config = config;
             let stdio = io::stdin();
             let input = stdio.lock();
-            let output = io::stdout();
+            let mut output = io::stdout();
+            let color = match term::terminfo::TerminfoTerminal::new(&mut output) {
+                Some(term) => term.supports_color(),
+                None => false
+            };
 
             let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
+            engine.color = color;
+            if args.verbose { engine.verbose = true; }
             match engine.pick(&mut config, args.category) {
                 Ok(_) => {
                     match rpick::write_config(&config_path, config) {

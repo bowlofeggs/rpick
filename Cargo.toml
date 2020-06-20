@@ -15,11 +15,14 @@ edition = "2018"
 
 [dependencies]
 dirs = "2"
+prettytable-rs = "0.8"
 rand = "0.7"
 rand_distr = "0.2"
 serde = {version = "1.0", features = ["derive"]}
 serde_yaml = "0.8"
+statrs = "0.12"
 structopt = "0.3"
+term = "0.5"
 
 [dev-dependencies]
 rand = {version = "0.7", features = ["small_rng"]}
