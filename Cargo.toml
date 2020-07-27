@@ -20,7 +20,7 @@ rand = "0.7"
 rand_distr = "0.2"
 serde = {version = "1.0", features = ["derive"]}
 serde_yaml = "0.8"
-statrs = "0.12"
+statrs = "0.13"
 structopt = "0.3"
 term = "0.5"
 
