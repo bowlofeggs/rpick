@@ -1,3 +1,9 @@
+# 0.7.0
+
+* [#43](https://gitlab.com/bowlofeggs/rpick/-/merge_requests/43) There is now a ```--verbose```
+  flag.
+
+
 # 0.6.1
 
 * Update Cargo.lock to get new dependencies.
