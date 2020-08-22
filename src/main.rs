@@ -71,7 +71,7 @@ fn main() {
             }
         },
         Err(error) => {
-            println!("{}", error);
+            println!("Error reading config file at {}: {}", config_path, error);
             std::process::exit(1);
         }
     }
