@@ -23,7 +23,7 @@ fn config_not_found() {
     let mut rpick = Command::new("target/debug/rpick");
     rpick.args(vec!["-c", "/does/not/exist", "test"]);
 
-    let proc = rpick.output().expect("Failed to spawn ffmpeg");
+    let proc = rpick.output().expect("Failed to spawn rpick");
 
     assert_eq!(proc.status.success(), false);
     let expected_output =
