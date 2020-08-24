@@ -27,3 +27,4 @@ term = "0.5"
 [dev-dependencies]
 rand = {version = "0.7", features = ["small_rng"]}
 rand_core = "0"
+tempfile = "3"
