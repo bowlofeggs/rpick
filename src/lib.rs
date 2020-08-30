@@ -491,7 +491,7 @@ pub fn write_config(config_file_path: &str, config: BTreeMap<String, ConfigCateg
 /// A category of items that can be chosen from.
 ///
 /// Each variant of this Enum maps to one of the supported algorithms.
-#[derive(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "model")]
@@ -601,7 +601,7 @@ pub struct LotteryChoice {
 ///
 /// * `name` - The name of the choice
 /// * `weight` - How much chance this choice has of being chosen, relative to the other choices.
-#[derive(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct WeightedChoice {
     name: String,
     #[serde(default = "default_weight")]
