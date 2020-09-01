@@ -44,6 +44,16 @@ even:
     - option 3
 ";
 
+const GAUSSIAN_CONFIG: &str = "
+---
+gaussian:
+  model: gaussian
+  choices:
+    - option 1
+    - option 2
+    - option 3
+";
+
 
 // The user should get a useful error message if the requested category does not exist.
 #[test]
@@ -90,6 +100,34 @@ fn even_pick() {
     let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
     let captures = re.captures(&stdout).unwrap();
     assert_eq!(expected_values.contains(captures.name("pick").unwrap().as_str()), true);
+}
+
+
+// Assert correct behavior with an gaussian model config
+#[test]
+fn gaussian_pick() {
+    let (stdout, config_contents) = test_rpick_with_config(
+        GAUSSIAN_CONFIG, &mut vec!["gaussian"], "y\n", true);
+
+    // Assert that the chosen item was a member of the config
+    let expected_values: HashSet<&'static str> =
+        ["option 1", "option 2", "option 3"].iter().cloned().collect();
+    let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
+    let captures = re.captures(&stdout).unwrap();
+    let pick = captures.name("pick").unwrap().as_str();
+    assert_eq!(expected_values.contains(pick), true);
+    // Assert that the gaussian model moves the picked item into last place
+    let mut expected_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&GAUSSIAN_CONFIG).expect("Could not parse yaml");
+    if let ConfigCategory::Gaussian{choices, stddev_scaling_factor: _}
+            = &mut expected_config.get_mut("gaussian").unwrap() {
+        let index = choices.iter().position(|x| x == pick).unwrap();
+        choices.remove(index);
+        choices.push(pick.to_string());
+    }
+    let parsed_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
+    assert_eq!(parsed_config, expected_config);
 }
 
 
