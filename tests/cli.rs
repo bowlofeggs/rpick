@@ -54,6 +54,19 @@ gaussian:
     - option 3
 ";
 
+const INVENTORY_CONFIG: &str = "
+---
+inventory:
+  model: inventory
+  choices:
+    - name: option 1
+      tickets: 1
+    - name: option 2
+      tickets: 1
+    - name: option 3
+      tickets: 1
+";
+
 
 // The user should get a useful error message if the requested category does not exist.
 #[test]
@@ -124,6 +137,33 @@ fn gaussian_pick() {
         let index = choices.iter().position(|x| x == pick).unwrap();
         choices.remove(index);
         choices.push(pick.to_string());
+    }
+    let parsed_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
+    assert_eq!(parsed_config, expected_config);
+}
+
+
+// Assert correct behavior with an inventory model config
+#[test]
+fn inventory_pick() {
+    let (stdout, config_contents) = test_rpick_with_config(
+        INVENTORY_CONFIG, &mut vec!["inventory"], "y\n", true);
+
+    // Assert that the chosen item was a member of the config
+    let expected_values: HashSet<&'static str> =
+        ["option 1", "option 2", "option 3"].iter().cloned().collect();
+    let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
+    let captures = re.captures(&stdout).unwrap();
+    let pick = captures.name("pick").unwrap().as_str();
+    assert_eq!(expected_values.contains(pick), true);
+    // Assert that the inventory model reduces the tickets on the picked item
+    let mut expected_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&INVENTORY_CONFIG).expect("Could not parse yaml");
+    if let ConfigCategory::Inventory{choices}
+            = &mut expected_config.get_mut("inventory").unwrap() {
+        let index = choices.iter().position(|x| x.name == pick).unwrap();
+        choices[index].tickets = 0;
     }
     let parsed_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&config_contents).expect("Could not parse yaml");

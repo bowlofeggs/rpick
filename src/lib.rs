@@ -570,9 +570,9 @@ pub enum ConfigCategory {
 #[derive(Debug)]
 #[derive(PartialEq, Serialize, Deserialize)]
 pub struct InventoryChoice {
-    name: String,
+    pub name: String,
     #[serde(default = "default_weight")]
-    tickets: u64,
+    pub tickets: u64,
 }
 
 
