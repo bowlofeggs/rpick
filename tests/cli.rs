@@ -65,6 +65,9 @@ inventory:
       tickets: 1
     - name: option 3
       tickets: 1
+    - name: option 4
+      # This one should never get picked
+      tickets: 0
 ";
 
 
@@ -150,7 +153,8 @@ fn inventory_pick() {
     let (stdout, config_contents) = test_rpick_with_config(
         INVENTORY_CONFIG, &mut vec!["inventory"], "y\n", true);
 
-    // Assert that the chosen item was a member of the config
+    // Assert that the chosen item was a member of the config. Note that "option 4" is not listed
+    // here, though it is in the config, since it has 0 tickets and should never be chosen.
     let expected_values: HashSet<&'static str> =
         ["option 1", "option 2", "option 3"].iter().cloned().collect();
     let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
