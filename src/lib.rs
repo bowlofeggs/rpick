@@ -587,11 +587,11 @@ pub struct InventoryChoice {
 #[derive(Debug)]
 #[derive(PartialEq, Serialize, Deserialize)]
 pub struct LotteryChoice {
-    name: String,
+    pub name: String,
     #[serde(default = "default_weight")]
-    tickets: u64,
+    pub tickets: u64,
     #[serde(default = "default_weight")]
-    weight: u64,
+    pub weight: u64,
 }
 
 

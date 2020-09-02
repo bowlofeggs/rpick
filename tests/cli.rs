@@ -70,6 +70,26 @@ inventory:
       tickets: 0
 ";
 
+const LOTTERY_CONFIG: &str = "
+---
+lottery:
+  model: lottery
+  choices:
+    - name: option 1
+      weight: 1
+      tickets: 1
+    - name: option 2
+      weight: 2
+      tickets: 1
+    - name: option 3
+      weight: 3
+      tickets: 1
+    - name: option 4
+      weight: 4
+      # This one should never get picked
+      tickets: 0
+";
+
 
 // The user should get a useful error message if the requested category does not exist.
 #[test]
@@ -113,9 +133,8 @@ fn even_pick() {
     // Assert that the chosen item was a member of the config
     let expected_values: HashSet<&'static str> =
         ["option 1", "option 2", "option 3"].iter().cloned().collect();
-    let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
-    let captures = re.captures(&stdout).unwrap();
-    assert_eq!(expected_values.contains(captures.name("pick").unwrap().as_str()), true);
+    let pick = get_pick(&stdout);
+    assert_eq!(expected_values.contains(pick.as_str()), true);
 }
 
 
@@ -128,18 +147,16 @@ fn gaussian_pick() {
     // Assert that the chosen item was a member of the config
     let expected_values: HashSet<&'static str> =
         ["option 1", "option 2", "option 3"].iter().cloned().collect();
-    let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
-    let captures = re.captures(&stdout).unwrap();
-    let pick = captures.name("pick").unwrap().as_str();
-    assert_eq!(expected_values.contains(pick), true);
+    let pick = get_pick(&stdout);
+    assert_eq!(expected_values.contains(pick.as_str()), true);
     // Assert that the gaussian model moves the picked item into last place
     let mut expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&GAUSSIAN_CONFIG).expect("Could not parse yaml");
     if let ConfigCategory::Gaussian{choices, stddev_scaling_factor: _}
             = &mut expected_config.get_mut("gaussian").unwrap() {
-        let index = choices.iter().position(|x| x == pick).unwrap();
+        let index = choices.iter().position(|x| x == pick.as_str()).unwrap();
         choices.remove(index);
-        choices.push(pick.to_string());
+        choices.push(pick);
     }
     let parsed_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
@@ -157,10 +174,8 @@ fn inventory_pick() {
     // here, though it is in the config, since it has 0 tickets and should never be chosen.
     let expected_values: HashSet<&'static str> =
         ["option 1", "option 2", "option 3"].iter().cloned().collect();
-    let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
-    let captures = re.captures(&stdout).unwrap();
-    let pick = captures.name("pick").unwrap().as_str();
-    assert_eq!(expected_values.contains(pick), true);
+    let pick = get_pick(&stdout);
+    assert_eq!(expected_values.contains(pick.as_str()), true);
     // Assert that the inventory model reduces the tickets on the picked item
     let mut expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&INVENTORY_CONFIG).expect("Could not parse yaml");
@@ -172,6 +187,54 @@ fn inventory_pick() {
     let parsed_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
     assert_eq!(parsed_config, expected_config);
+}
+
+
+// Assert correct behavior with an lottery model config
+#[test]
+fn lottery_pick() {
+    let (stdout, config_contents) = test_rpick_with_config(
+        LOTTERY_CONFIG, &mut vec!["lottery"], "y\n", true);
+
+    // Assert that the chosen item was a member of the config. Note that "option 4" is not listed
+    // here, though it is in the config, since it has 0 tickets and should never be chosen.
+    let expected_values: HashSet<&'static str> =
+        ["option 1", "option 2", "option 3"].iter().cloned().collect();
+    let pick = get_pick(&stdout);
+    assert_eq!(expected_values.contains(pick.as_str()), true);
+    // Assert that the lottery model removes the tickets on the picked item, and gives more tickets
+    // to the ones that weren't picked.
+    let mut expected_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&LOTTERY_CONFIG).expect("Could not parse yaml");
+    if let ConfigCategory::Lottery{choices}
+            = &mut expected_config.get_mut("lottery").unwrap() {
+        for choice in choices.iter_mut() {
+            if choice.name == pick {
+                choice.tickets = 0;
+            } else {
+                choice.tickets += choice.weight;
+            }
+        }
+    }
+    let parsed_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
+    assert_eq!(parsed_config, expected_config);
+}
+
+
+// Return which item rpick chose in the given stdout.
+//
+// # Arguments
+//
+// * `stdout` - The output from an rpick run.
+//
+// # Returns
+//
+// The item that rpick chose.
+fn get_pick(stdout: &str) -> String {
+    let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
+    let captures = re.captures(&stdout).unwrap();
+    captures.name("pick").unwrap().as_str().to_string()
 }
 
 
