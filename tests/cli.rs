@@ -100,6 +100,22 @@ lru:
     - option 3
 ";
 
+const WEIGHTED_CONFIG: &str = "
+---
+weighted:
+  model: weighted
+  choices:
+    - name: option 1
+      weight: 1
+    - name: option 2
+      weight: 2
+    - name: option 3
+      weight: 3
+    - name: option 4
+      # This one should never get picked
+      weight: 0
+";
+
 
 // The user should get a useful error message if the requested category does not exist.
 #[test]
@@ -251,6 +267,27 @@ fn lru_pick() {
     let parsed_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
     assert_eq!(parsed_config, expected_config);
+}
+
+
+// Assert correct behavior with an weighted distribution model config
+#[test]
+fn weighted_pick() {
+    let (stdout, config_contents) = test_rpick_with_config(
+        WEIGHTED_CONFIG, &mut vec!["weighted"], "y\n", true);
+
+    let expected_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&WEIGHTED_CONFIG).expect("Could not parse yaml");
+    let parsed_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
+    // The weighted config does not modify the config file
+    assert_eq!(parsed_config, expected_config);
+    // Assert that the chosen item was a member of the config. Note that "option 4" does not appear
+    // here since it has a weight of 0, meaning it should never get chosen.
+    let expected_values: HashSet<&'static str> =
+        ["option 1", "option 2", "option 3"].iter().cloned().collect();
+    let pick = get_pick(&stdout);
+    assert_eq!(expected_values.contains(pick.as_str()), true);
 }
 
 
