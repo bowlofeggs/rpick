@@ -90,6 +90,16 @@ lottery:
       tickets: 0
 ";
 
+const LRU_CONFIG: &str = "
+---
+lru:
+  model: lru
+  choices:
+    - option 1
+    - option 2
+    - option 3
+";
+
 
 // The user should get a useful error message if the requested category does not exist.
 #[test]
@@ -215,6 +225,28 @@ fn lottery_pick() {
                 choice.tickets += choice.weight;
             }
         }
+    }
+    let parsed_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
+    assert_eq!(parsed_config, expected_config);
+}
+
+
+// Assert correct behavior with an lru model config
+#[test]
+fn lru_pick() {
+    let (stdout, config_contents) = test_rpick_with_config(
+        LRU_CONFIG, &mut vec!["lru"], "y\n", true);
+
+    // Assert that the chosen item was a member of the config
+    assert_eq!(get_pick(&stdout), "option 1");
+    // Assert that the lru model moves the picked item into last place
+    let mut expected_config: BTreeMap<String, ConfigCategory> =
+        serde_yaml::from_str(&LRU_CONFIG).expect("Could not parse yaml");
+    if let ConfigCategory::LRU{choices}
+            = &mut expected_config.get_mut("lru").unwrap() {
+        let pick = choices.remove(0);
+        choices.push(pick);
     }
     let parsed_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
