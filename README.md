@@ -207,7 +207,7 @@ round. Once an item is picked, it loses one ticket, i.e., dropping the inventory
 item by one. It accepts two keys:
 
 * ```model```: This must be set to the string "inventory", in order to select this model.
-* ```choices```: This must be a list of objects. Each object accepts three keys:
+* ```choices```: This must be a list of objects. Each object accepts two keys:
   - ```name```: This is required, and is the name of the choice.
   - ```tickets```: The current number of lottery tickets that this choice has. This is optional, an
     integer, and defaults to 1.
