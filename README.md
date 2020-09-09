@@ -230,7 +230,7 @@ tea:
 The ```lottery``` distribution model is also a dynamic version of the ```weighted``` model. Each of
 the choices has a certain number of lottery tickets that influence how likely they are to be picked
 that round. Once an item is picked, it loses all of its lottery tickets and every choice that wasn't
-picked gains more lottery tickets. It accepts three keys:
+picked gains more lottery tickets. It accepts two keys:
 
 * ```model```: This must be set to the string "lottery", in order to select this model.
 * ```choices```: This must be a list of objects. Each object accepts three keys:
