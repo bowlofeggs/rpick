@@ -8,7 +8,7 @@ podman_volume = -v $(CURDIR)/..:$(podman_mount_dir):z
 podman_run = podman run --network=host --rm -it $(podman_volume) -e RPICK_CONFIG="$(podman_mount_dir)/devel/config.yml" -w $(podman_mount_dir) $(podman_tag)
 
 build:
-	podman images | grep rpick || podman build --pull -t $(podman_tag) $(podman_volume) --force-rm=true .
+	podman build --pull -t $(podman_tag) $(podman_volume) --force-rm=true .
 
 shell: build
 	$(podman_run) bash
@@ -17,3 +17,5 @@ test: build
 	$(podman_run) cargo test
 	$(podman_run) cargo clippy --all-targets --all-features -- -D warnings
 	$(podman_run) cargo doc
+	$(podman_run) cargo fmt -- --check -v
+	$(podman_run) cargo audit

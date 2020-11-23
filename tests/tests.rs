@@ -14,5 +14,4 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// This file simply includes tests from other modules.
-
 mod cli;

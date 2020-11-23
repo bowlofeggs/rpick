@@ -14,11 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// Test the even model.
-
 use std::collections::{BTreeMap, HashSet};
 
 use rpick::ConfigCategory;
-
 
 const CONFIG: &str = "
 ---
@@ -30,12 +28,11 @@ even:
     - option 3
 ";
 
-
 // Assert correct behavior with an even distribution model config
 #[test]
 fn pick() {
-    let (stdout, config_contents) = super::test_rpick_with_config(
-        CONFIG, &mut vec!["even"], "y\n", true);
+    let (stdout, config_contents) =
+        super::test_rpick_with_config(CONFIG, &mut vec!["even"], "y\n", true);
 
     let expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
@@ -44,8 +41,10 @@ fn pick() {
     // The even config does not modify the config file
     assert_eq!(parsed_config, expected_config);
     // Assert that the chosen item was a member of the config
-    let expected_values: HashSet<&'static str> =
-        ["option 1", "option 2", "option 3"].iter().cloned().collect();
+    let expected_values: HashSet<&'static str> = ["option 1", "option 2", "option 3"]
+        .iter()
+        .cloned()
+        .collect();
     let pick = super::get_pick(&stdout);
     assert_eq!(expected_values.contains(pick.as_str()), true);
 }

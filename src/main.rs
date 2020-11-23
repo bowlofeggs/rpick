@@ -19,9 +19,7 @@ use std::io;
 use structopt::StructOpt;
 use term::Terminal;
 
-
 const CONFIG_FILE: &str = "rpick.yml";
-
 
 #[derive(StructOpt)]
 struct Cli {
@@ -32,9 +30,8 @@ struct Cli {
     config: Option<String>,
     #[structopt(short, long)]
     /// Print more information about the pick.
-    verbose: bool
+    verbose: bool,
 }
-
 
 fn main() {
     let args = Cli::from_args();
@@ -48,20 +45,20 @@ fn main() {
             let mut output = io::stdout();
             let color = match term::terminfo::TerminfoTerminal::new(&mut output) {
                 Some(term) => term.supports_color(),
-                None => false
+                None => false,
             };
 
             let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
             engine.color = color;
-            if args.verbose { engine.verbose = true; }
+            if args.verbose {
+                engine.verbose = true;
+            }
             match engine.pick(&mut config, args.category) {
-                Ok(_) => {
-                    match rpick::write_config(&config_path, config) {
-                        Ok(_) => {},
-                        Err(error) => {
-                            println!("{}", error);
-                            std::process::exit(1);
-                        }
+                Ok(_) => match rpick::write_config(&config_path, config) {
+                    Ok(_) => {}
+                    Err(error) => {
+                        println!("{}", error);
+                        std::process::exit(1);
                     }
                 },
                 Err(error) => {
@@ -69,7 +66,7 @@ fn main() {
                     std::process::exit(1);
                 }
             }
-        },
+        }
         Err(error) => {
             println!("Error reading config file at {}: {}", config_path, error);
             std::process::exit(1);
@@ -77,16 +74,13 @@ fn main() {
     }
 }
 
-
 /// Return the path to the user's config file.
 ///
 /// If the config flag is set in the given CLI args, that path is used. Otherwise, the default
 /// config name (CONFIG_FILE) is appended to the user's home config directory to form the path.
 fn get_config_file_path(args: &Cli) -> String {
     match &args.config {
-        Some(config) => {
-            config.clone()
-        }
+        Some(config) => config.clone(),
         None => {
             let config_dir = dirs::preference_dir().expect("Unable to find config dir.");
             let config_file = config_dir.join(CONFIG_FILE);

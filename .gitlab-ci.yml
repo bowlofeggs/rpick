@@ -44,6 +44,13 @@ cargo doc:
     script:
         - cargo doc
 
+cargo fmt:
+    <<: *only-default
+    stage: test
+    script:
+        - rustup component add rustfmt
+        - cargo fmt -- --check -v
+
 cargo test:
     <<: *only-default
     stage: test

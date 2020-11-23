@@ -14,11 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// Assert correct operation of the weighted model.
-
 use std::collections::{BTreeMap, HashSet};
 
 use rpick::ConfigCategory;
-
 
 const CONFIG: &str = "
 ---
@@ -36,12 +34,11 @@ weighted:
       weight: 0
 ";
 
-
 #[test]
 // Assert correct behavior with an weighted distribution model config
 fn pick() {
-    let (stdout, config_contents) = super::test_rpick_with_config(
-        CONFIG, &mut vec!["weighted"], "y\n", true);
+    let (stdout, config_contents) =
+        super::test_rpick_with_config(CONFIG, &mut vec!["weighted"], "y\n", true);
 
     let expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
@@ -51,8 +48,10 @@ fn pick() {
     assert_eq!(parsed_config, expected_config);
     // Assert that the chosen item was a member of the config. Note that "option 4" does not appear
     // here since it has a weight of 0, meaning it should never get chosen.
-    let expected_values: HashSet<&'static str> =
-        ["option 1", "option 2", "option 3"].iter().cloned().collect();
+    let expected_values: HashSet<&'static str> = ["option 1", "option 2", "option 3"]
+        .iter()
+        .cloned()
+        .collect();
     let pick = super::get_pick(&stdout);
     assert_eq!(expected_values.contains(pick.as_str()), true);
 }

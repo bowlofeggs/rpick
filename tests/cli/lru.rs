@@ -14,11 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// Assert correct operation of the lru model.
-
 use std::collections::BTreeMap;
 
 use rpick::ConfigCategory;
-
 
 const CONFIG: &str = "
 ---
@@ -30,20 +28,18 @@ lru:
     - option 3
 ";
 
-
 #[test]
 // Assert correct behavior with an lru model config
 fn pick() {
-    let (stdout, config_contents) = super::test_rpick_with_config(
-        CONFIG, &mut vec!["lru"], "y\n", true);
+    let (stdout, config_contents) =
+        super::test_rpick_with_config(CONFIG, &mut vec!["lru"], "y\n", true);
 
     // Assert that the chosen item was a member of the config
     assert_eq!(super::get_pick(&stdout), "option 1");
     // Assert that the lru model moves the picked item into last place
     let mut expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
-    if let ConfigCategory::LRU{choices}
-            = &mut expected_config.get_mut("lru").unwrap() {
+    if let ConfigCategory::LRU { choices } = &mut expected_config.get_mut("lru").unwrap() {
         let pick = choices.remove(0);
         choices.push(pick);
     }

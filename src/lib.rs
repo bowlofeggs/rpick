@@ -15,17 +15,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
 //!
 use std::collections::BTreeMap;
-use std::{error, fmt};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
+use std::{error, fmt};
 
-#[macro_use] extern crate prettytable;
-use prettytable::{Table, Cell, format};
+#[macro_use]
+extern crate prettytable;
+use prettytable::{format, Cell, Table};
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use statrs::distribution::Univariate;
-
 
 /// The rpick Engine object allows you to write your own rpick interface.
 ///
@@ -47,7 +47,6 @@ pub struct Engine<I, O, R> {
     output: O,
     rng: R,
 }
-
 
 impl<'a, I, O, R> Engine<I, O, R>
 where
@@ -76,8 +75,14 @@ where
     ///
     /// let mut engine = rpick::Engine::new(input, output, rand::thread_rng());
     /// ```
-    pub fn new(input: I, output: O, rng:R) -> Engine<I, O, R> {
-        Engine{input, output, rng, color: false, verbose: false}
+    pub fn new(input: I, output: O, rng: R) -> Engine<I, O, R> {
+        Engine {
+            input,
+            output,
+            rng,
+            color: false,
+            verbose: false,
+        }
     }
 
     /// Pick an item from the [`ConfigCategory`] referenced by the given `category`.
@@ -118,36 +123,28 @@ where
     ///     assert_eq!(choice, "that");
     /// }
     /// ```
-    pub fn pick(&mut self, config: &mut BTreeMap<String, ConfigCategory>, category: String)
-            -> Result<String, Box<dyn error::Error>> {
+    pub fn pick(
+        &mut self,
+        config: &mut BTreeMap<String, ConfigCategory>,
+        category: String,
+    ) -> Result<String, Box<dyn error::Error>> {
         let config_category = config.get_mut(&category[..]);
         match config_category {
-            Some(category) => {
-                match category {
-                    ConfigCategory::Even { choices } => {
-                        Ok(self.pick_even(choices))
-                    }
-                    ConfigCategory::Gaussian { choices, stddev_scaling_factor } => {
-                        Ok(self.pick_gaussian(choices, *stddev_scaling_factor))
-                    }
-                    ConfigCategory::Inventory { choices } => {
-                        Ok(self.pick_inventory(choices))
-                    }
-                    ConfigCategory::Lottery { choices } => {
-                        Ok(self.pick_lottery(choices))
-                    }
-                    ConfigCategory::LRU { choices } => {
-                        Ok(self.pick_lru(choices))
-                    }
-                    ConfigCategory::Weighted { choices } => {
-                        Ok(self.pick_weighted(choices))
-                    }
-                }
-            }
-            None => {
-                Err(Box::new(ValueError::new(
-                    format!("Category {} not found in config.", category))))
-            }
+            Some(category) => match category {
+                ConfigCategory::Even { choices } => Ok(self.pick_even(choices)),
+                ConfigCategory::Gaussian {
+                    choices,
+                    stddev_scaling_factor,
+                } => Ok(self.pick_gaussian(choices, *stddev_scaling_factor)),
+                ConfigCategory::Inventory { choices } => Ok(self.pick_inventory(choices)),
+                ConfigCategory::Lottery { choices } => Ok(self.pick_lottery(choices)),
+                ConfigCategory::LRU { choices } => Ok(self.pick_lru(choices)),
+                ConfigCategory::Weighted { choices } => Ok(self.pick_weighted(choices)),
+            },
+            None => Err(Box::new(ValueError::new(format!(
+                "Category {} not found in config.",
+                category
+            )))),
         }
     }
 
@@ -159,8 +156,8 @@ where
     /// Prompt the user for consent for the given choice, returning a bool true if they accept the
     /// choice, or false if they do not.
     fn get_consent(&mut self, choice: &str) -> bool {
-        write!(self.output, "Choice is {}. Accept? (Y/n) ", choice).expect(
-            "Could not write to output");
+        write!(self.output, "Choice is {}. Accept? (Y/n) ", choice)
+            .expect("Could not write to output");
         self.output.flush().unwrap();
         let line1 = self.input.by_ref().lines().next().unwrap().unwrap();
         if ["", "y", "Y"].contains(&line1.as_str()) {
@@ -172,14 +169,17 @@ where
     /// Use an even distribution random model to pick from the given choices.
     fn pick_even(&mut self, choices: &[String]) -> String {
         let initialize_candidates = || {
-            choices.iter().enumerate().map(|x| ((x.0, x.1), 1)).collect::<Vec<_>>()
+            choices
+                .iter()
+                .enumerate()
+                .map(|x| ((x.0, x.1), 1))
+                .collect::<Vec<_>>()
         };
 
         let index = self.pick_weighted_common(&initialize_candidates);
 
         choices[index].clone()
     }
-
 
     /// Run the gaussian model for the given choices and standard deviation scaling factor. When the
     /// user accepts a choice, move that choice to end of the choices Vector and return.
@@ -218,8 +218,12 @@ where
     /// Run the inventory model for the given choices.
     fn pick_inventory(&mut self, choices: &mut Vec<InventoryChoice>) -> String {
         let initialize_candidates = || {
-            choices.iter().enumerate().filter(|x| x.1.tickets > 0).map(
-                |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>()
+            choices
+                .iter()
+                .enumerate()
+                .filter(|x| x.1.tickets > 0)
+                .map(|x| ((x.0, &x.1.name), x.1.tickets))
+                .collect::<Vec<_>>()
         };
 
         let index = self.pick_weighted_common(&initialize_candidates);
@@ -250,8 +254,12 @@ where
     /// Run the lottery model for the given choices.
     fn pick_lottery(&mut self, choices: &mut Vec<LotteryChoice>) -> String {
         let initialize_candidates = || {
-            choices.iter().enumerate().filter(|x| x.1.tickets > 0).map(
-                |x| ((x.0, &x.1.name), x.1.tickets)).collect::<Vec<_>>()
+            choices
+                .iter()
+                .enumerate()
+                .filter(|x| x.1.tickets > 0)
+                .map(|x| ((x.0, &x.1.name), x.1.tickets))
+                .collect::<Vec<_>>()
         };
 
         let index = self.pick_weighted_common(&initialize_candidates);
@@ -266,7 +274,11 @@ where
     /// Run the weighted model for the given choices.
     fn pick_weighted(&mut self, choices: &[WeightedChoice]) -> String {
         let initialize_candidates = || {
-            choices.iter().enumerate().map(|x| ((x.0, &x.1.name), x.1.weight)).collect::<Vec<_>>()
+            choices
+                .iter()
+                .enumerate()
+                .map(|x| ((x.0, &x.1.name), x.1.weight))
+                .collect::<Vec<_>>()
         };
 
         let index = self.pick_weighted_common(&initialize_candidates);
@@ -282,13 +294,16 @@ where
     /// weight of that choice. For example, if the first choice is "ice cream" and has a weight of
     /// 5, the data structure would look like this: ((0, "ice cream"), 5)
     fn pick_weighted_common(
-            &mut self,
-            initialize_candidates: &dyn Fn() -> Vec<((usize, &'a String), u64)>) -> usize {
+        &mut self,
+        initialize_candidates: &dyn Fn() -> Vec<((usize, &'a String), u64)>,
+    ) -> usize {
         let mut candidates = initialize_candidates();
 
         loop {
-            let (index, choice) = candidates.choose_weighted(
-                &mut self.rng, |item| item.1).unwrap().0;
+            let (index, choice) = candidates
+                .choose_weighted(&mut self.rng, |item| item.1)
+                .unwrap()
+                .0;
 
             if self.verbose {
                 self.print_weighted_chance_table(index, &candidates);
@@ -312,8 +327,7 @@ where
     /// `index` - The index of the candidate that was chosen. This is used to turn the chosen
     ///     candidate yellow in the table.
     /// `candidates` - A list of the candidates.
-    fn print_gaussian_chance_table(
-            &mut self, index: usize, candidates: &[String], stddev: f64) {
+    fn print_gaussian_chance_table(&mut self, index: usize, candidates: &[String], stddev: f64) {
         // Let's make a copy of the candidate list so that we can sort it for the table
         // without sorting the real candidate list.
         let candidates = candidates.to_owned();
@@ -327,7 +341,8 @@ where
             // of 2 is to account for the abs() we use in pick_gaussian(), which causes us to
             // reflect the distribution around the x-axis (thus the chance is this slice of the CDF
             // on both sides of the x-axis, which is the same chance as twice this singular slice).
-            let chance: f64 = (distribution.cdf((i as f64) + 1.0) - distribution.cdf(i as f64)) * 200.;
+            let chance: f64 =
+                (distribution.cdf((i as f64) + 1.0) - distribution.cdf(i as f64)) * 200.;
             total_chance += chance;
             let mut row = row![];
             let style = if i == index { "bFy" } else { "" };
@@ -347,11 +362,14 @@ where
     /// `index` - The index of the candidate that was chosen. This is used to turn the chosen
     ///     candidate yellow in the table.
     /// `candidates` - A list of the candidates.
-    fn print_lru_table(
-            &mut self, index: usize, candidates: &[String]) {
+    fn print_lru_table(&mut self, index: usize, candidates: &[String]) {
         // Filter out candidates that have already been rejected by the user.
-        let candidates = candidates.iter().enumerate().filter(
-            |(i, _)| { i >= &index }).map(|x| x.1).collect::<Vec<_>>();
+        let candidates = candidates
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| i >= &index)
+            .map(|x| x.1)
+            .collect::<Vec<_>>();
 
         let mut table = Table::new();
         table.set_titles(row![c->"Name"]);
@@ -378,12 +396,19 @@ where
         table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
 
         writeln!(&mut self.output).expect("Could not write to output");
-        match (self.color, term::terminfo::TerminfoTerminal::new(&mut self.output)) {
+        match (
+            self.color,
+            term::terminfo::TerminfoTerminal::new(&mut self.output),
+        ) {
             (true, Some(mut term)) => {
-                table.print_term(&mut term).expect("Could not print to terminal");
-            },
-            _                      => {
-                table.print(&mut self.output).expect("Could not print to terminal");
+                table
+                    .print_term(&mut term)
+                    .expect("Could not print to terminal");
+            }
+            _ => {
+                table
+                    .print(&mut self.output)
+                    .expect("Could not print to terminal");
             }
         }
         writeln!(&mut self.output).expect("Could not write to output");
@@ -397,7 +422,10 @@ where
     ///     candidate yellow in the table.
     /// `candidates` - A list of the candidates.
     fn print_weighted_chance_table(
-            &mut self, index: usize, candidates: &[((usize, &'a String), u64)]) {
+        &mut self,
+        index: usize,
+        candidates: &[((usize, &'a String), u64)],
+    ) {
         // Let's make a copy of the candidate list so that we can sort it for the table
         // without sorting the real candidate list.
         let mut candidates = candidates.to_owned();
@@ -422,13 +450,11 @@ where
     }
 }
 
-
 /// Returned in the event that an invalid parameter was used in the API.
 #[derive(Debug)]
 struct ValueError {
-    message: String
+    message: String,
 }
-
 
 impl ValueError {
     /// Construct a new ValueError.
@@ -437,10 +463,9 @@ impl ValueError {
     ///
     /// * `message` - The error message to accompany the ValueError.
     fn new(message: String) -> ValueError {
-        ValueError{message}
+        ValueError { message }
     }
 }
-
 
 impl fmt::Display for ValueError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -448,9 +473,7 @@ impl fmt::Display for ValueError {
     }
 }
 
-
 impl error::Error for ValueError {}
-
 
 /// Return the user's config as a BTreeMap.
 ///
@@ -461,8 +484,9 @@ impl error::Error for ValueError {}
 /// # Returns
 ///
 /// Returns a mapping of YAML to [`ConfigCategory`]'s, or an Error.
-pub fn read_config(config_file_path: &str)
-        -> Result<BTreeMap<String, ConfigCategory>, Box<dyn error::Error>> {
+pub fn read_config(
+    config_file_path: &str,
+) -> Result<BTreeMap<String, ConfigCategory>, Box<dyn error::Error>> {
     let f = File::open(&config_file_path)?;
     let reader = BufReader::new(f);
 
@@ -470,23 +494,26 @@ pub fn read_config(config_file_path: &str)
     Ok(config)
 }
 
-
 /// Save the data from the given BTreeMap to the user's config file.
 ///
 /// # Arguments
 ///
 /// * `config_file_path` - A filesystem path that the config should be written to.
 /// * `config` - The config that should be serialized as YAML.
-pub fn write_config(config_file_path: &str, config: BTreeMap<String, ConfigCategory>)
-        -> Result<(), Box<dyn error::Error>> {
-    let mut f = OpenOptions::new().write(true).create(true).truncate(true).open(
-        &config_file_path)?;
+pub fn write_config(
+    config_file_path: &str,
+    config: BTreeMap<String, ConfigCategory>,
+) -> Result<(), Box<dyn error::Error>> {
+    let mut f = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&config_file_path)?;
     let yaml = serde_yaml::to_string(&config).unwrap();
 
     f.write_all(&yaml.into_bytes())?;
     Ok(())
 }
-
 
 /// A category of items that can be chosen from.
 ///
@@ -501,9 +528,7 @@ pub enum ConfigCategory {
     /// # Attributes
     ///
     /// * `choices` - The list of choices to pick from.
-    Even {
-        choices: Vec<String>
-    },
+    Even { choices: Vec<String> },
     /// The Gaussian variant uses a
     /// [Gaussian distribution](https://en.wikipedia.org/wiki/Normal_distribution) to prefer choices
     /// near the beginning of the list of choices over those at the end. Once a choice has been
@@ -517,7 +542,7 @@ pub enum ConfigCategory {
     Gaussian {
         #[serde(default = "default_stddev_scaling_factor")]
         stddev_scaling_factor: f64,
-        choices: Vec<String>
+        choices: Vec<String>,
     },
     /// The Inventory variant uses a weighted distribution to pick items, with each items chances
     /// being tied to how many tickets it has. When a choice is accepted, that choice's ticket
@@ -526,9 +551,7 @@ pub enum ConfigCategory {
     /// # Attributes
     ///
     /// * `choices` - The list of choices to pick from.
-    Inventory {
-        choices: Vec<InventoryChoice>
-    },
+    Inventory { choices: Vec<InventoryChoice> },
     /// The LRU variant picks the Least Recently Used item from the list of choices. The least
     /// recently used choice is found at the beginning of the list. Once a choice has been
     /// accepted, it is moved to the end of the list.
@@ -537,9 +560,7 @@ pub enum ConfigCategory {
     ///
     /// * `choices` - The list of choices to pick from.
     #[serde(rename = "lru")]
-    LRU {
-        choices: Vec<String>
-    },
+    LRU { choices: Vec<String> },
     /// The Lottery variant uses a weighted distribution to pick items, with each items chances
     /// being tied to how many tickets it has. When a choice is accepted, that choice's ticket
     /// count is set to 0, and every choice not chosen receives its weight in additional tickets.
@@ -547,19 +568,14 @@ pub enum ConfigCategory {
     /// # Attributes
     ///
     /// * `choices` - The list of choices to pick from.
-    Lottery {
-        choices: Vec<LotteryChoice>
-    },
+    Lottery { choices: Vec<LotteryChoice> },
     /// The Weighted variant is a simple weighted distribution.
     ///
     /// # Attributes
     ///
     /// * `choices` - The list of choices to pick from.
-    Weighted {
-        choices: Vec<WeightedChoice>
-    }
+    Weighted { choices: Vec<WeightedChoice> },
 }
-
 
 /// Represents an individual choice for the inventory model.
 ///
@@ -567,14 +583,12 @@ pub enum ConfigCategory {
 ///
 /// * `name` - The name of the choice.
 /// * `tickets` - The current number of tickets the choice has.
-#[derive(Debug)]
-#[derive(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct InventoryChoice {
     pub name: String,
     #[serde(default = "default_weight")]
     pub tickets: u64,
 }
-
 
 /// Represents an individual choice for the lottery model.
 ///
@@ -584,8 +598,7 @@ pub struct InventoryChoice {
 /// * `tickets` - The current number of tickets the choice has.
 /// * `weight` - The number of tickets that will be added to `tickets` each time this choice is not
 ///   picked.
-#[derive(Debug)]
-#[derive(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct LotteryChoice {
     pub name: String,
     #[serde(default = "default_weight")]
@@ -593,7 +606,6 @@ pub struct LotteryChoice {
     #[serde(default = "default_weight")]
     pub weight: u64,
 }
-
 
 /// Represents an individual choice for the weighted model.
 ///
@@ -608,18 +620,15 @@ pub struct WeightedChoice {
     weight: u64,
 }
 
-
 /// Define the default for the stddev_scaling_factor setting as 3.0.
 fn default_stddev_scaling_factor() -> f64 {
     3.0
 }
 
-
 /// Define the default for the weight setting as 1.
 fn default_weight() -> u64 {
     1
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -690,9 +699,13 @@ Choice is this. Accept? (Y/n) ";
     #[test]
     fn test_get_consent() {
         let tests = [
-            (String::from("y"), true), (String::from("Y"), true), (String::from("\n"), true),
-            (String::from("f"), false), (String::from("F"), false),
-            (String::from("anything else"), false)];
+            (String::from("y"), true),
+            (String::from("Y"), true),
+            (String::from("\n"), true),
+            (String::from("f"), false),
+            (String::from("F"), false),
+            (String::from("anything else"), false),
+        ];
 
         for (input, expected_output) in tests.iter() {
             let output = Vec::new();
@@ -710,16 +723,25 @@ Choice is this. Accept? (Y/n) ";
         let input = String::from("N\ny");
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
-        let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
-        let category = ConfigCategory::Even{choices};
+        let choices = vec![
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
+        let category = ConfigCategory::Even { choices };
         let mut config = BTreeMap::new();
         config.insert("things".to_string(), category);
 
-        let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+        let choice = engine
+            .pick(&mut config, "things".to_string())
+            .expect("unexpected");
 
         assert_eq!(choice, "that");
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) ");
+        assert_eq!(
+            output,
+            "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) "
+        );
     }
 
     #[test]
@@ -727,17 +749,24 @@ Choice is this. Accept? (Y/n) ";
         let input = String::from("N\ny");
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
-        let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
-        let category = ConfigCategory::Even{choices};
+        let choices = vec![
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
+        let category = ConfigCategory::Even { choices };
         let mut config = BTreeMap::new();
         config.insert("things".to_string(), category);
 
         match engine.pick(&mut config, "does not exist".to_string()) {
             Ok(_) => {
                 panic!("The non-existant category should have returned an error.");
-            },
+            }
             Err(error) => {
-                assert_eq!(format!("{}", error), "Category does not exist not found in config.");
+                assert_eq!(
+                    format!("{}", error),
+                    "Category does not exist not found in config."
+                );
             }
         }
     }
@@ -747,7 +776,11 @@ Choice is this. Accept? (Y/n) ";
         let input = String::from("y");
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
-        let choices = vec![String::from("this"), String::from("that"), String::from("the other")];
+        let choices = vec![
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
 
         let result = engine.pick_even(&choices);
 
@@ -769,21 +802,36 @@ Choice is this. Accept? (Y/n) ";
         // this works OK. We seed the engine differently for 32-bit architectures than for
         // 64-bit so that they each pick the same result for this test.
         #[cfg(target_pointer_width = "64")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(1));
+        let mut engine = Engine::new(
+            input.as_bytes(),
+            output,
+            rand::rngs::SmallRng::seed_from_u64(1),
+        );
         #[cfg(target_pointer_width = "32")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(2));
+        let mut engine = Engine::new(
+            input.as_bytes(),
+            output,
+            rand::rngs::SmallRng::seed_from_u64(2),
+        );
         let mut choices = vec![
-            String::from("this"), String::from("that"), String::from("the other")];
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
 
         let result = engine.pick_gaussian(&mut choices, 3.0);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, "Choice is that. Accept? (Y/n) ");
         assert_eq!(result, "that");
-        assert_eq!(choices,
-                   vec![String::from("this"), String::from("the other"), String::from("that")]);
+        assert_eq!(
+            choices,
+            vec![
+                String::from("this"),
+                String::from("the other"),
+                String::from("that")
+            ]
+        );
     }
 
     #[test]
@@ -799,22 +847,37 @@ Choice is this. Accept? (Y/n) ";
         // this works OK. We seed the engine differently for 32-bit architectures than for
         // 64-bit so that they each pick the same result for this test.
         #[cfg(target_pointer_width = "64")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(1));
+        let mut engine = Engine::new(
+            input.as_bytes(),
+            output,
+            rand::rngs::SmallRng::seed_from_u64(1),
+        );
         #[cfg(target_pointer_width = "32")]
-        let mut engine = Engine::new(input.as_bytes(), output,
-                                     rand::rngs::SmallRng::seed_from_u64(2));
+        let mut engine = Engine::new(
+            input.as_bytes(),
+            output,
+            rand::rngs::SmallRng::seed_from_u64(2),
+        );
         engine.verbose = true;
         let mut choices = vec![
-            String::from("this"), String::from("that"), String::from("the other")];
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
 
         let result = engine.pick_gaussian(&mut choices, 3.0);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, PICK_GAUSSIAN_VERBOSE_EXPECTED_OUTPUT);
         assert_eq!(result, "that");
-        assert_eq!(choices,
-                   vec![String::from("this"), String::from("the other"), String::from("that")]);
+        assert_eq!(
+            choices,
+            vec![
+                String::from("this"),
+                String::from("the other"),
+                String::from("that")
+            ]
+        );
     }
 
     #[test]
@@ -823,22 +886,46 @@ Choice is this. Accept? (Y/n) ";
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
-            InventoryChoice{name: "this".to_string(), tickets: 0},
-            InventoryChoice{name: "that".to_string(), tickets: 2},
-            InventoryChoice{name: "the other".to_string(), tickets: 3}];
+            InventoryChoice {
+                name: "this".to_string(),
+                tickets: 0,
+            },
+            InventoryChoice {
+                name: "that".to_string(),
+                tickets: 2,
+            },
+            InventoryChoice {
+                name: "the other".to_string(),
+                tickets: 3,
+            },
+        ];
 
         let result = engine.pick_inventory(&mut choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) 🤨\n\
-                            Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+        assert_eq!(
+            output,
+            "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) 🤨\n\
+                            Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) "
+        );
         assert_eq!(result, "the other");
         assert_eq!(
             choices,
             vec![
-                InventoryChoice{name: "this".to_string(), tickets: 0},
-                InventoryChoice{name: "that".to_string(), tickets: 2},
-                InventoryChoice{name: "the other".to_string(), tickets: 2}]);
+                InventoryChoice {
+                    name: "this".to_string(),
+                    tickets: 0
+                },
+                InventoryChoice {
+                    name: "that".to_string(),
+                    tickets: 2
+                },
+                InventoryChoice {
+                    name: "the other".to_string(),
+                    tickets: 2
+                }
+            ]
+        );
     }
 
     #[test]
@@ -848,9 +935,19 @@ Choice is this. Accept? (Y/n) ";
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         engine.verbose = true;
         let mut choices = vec![
-            InventoryChoice{name: "this".to_string(), tickets: 0},
-            InventoryChoice{name: "that".to_string(), tickets: 2},
-            InventoryChoice{name: "the other".to_string(), tickets: 3}];
+            InventoryChoice {
+                name: "this".to_string(),
+                tickets: 0,
+            },
+            InventoryChoice {
+                name: "that".to_string(),
+                tickets: 2,
+            },
+            InventoryChoice {
+                name: "the other".to_string(),
+                tickets: 3,
+            },
+        ];
 
         let result = engine.pick_inventory(&mut choices);
 
@@ -860,9 +957,20 @@ Choice is this. Accept? (Y/n) ";
         assert_eq!(
             choices,
             vec![
-                InventoryChoice{name: "this".to_string(), tickets: 0},
-                InventoryChoice{name: "that".to_string(), tickets: 1},
-                InventoryChoice{name: "the other".to_string(), tickets: 3}]);
+                InventoryChoice {
+                    name: "this".to_string(),
+                    tickets: 0
+                },
+                InventoryChoice {
+                    name: "that".to_string(),
+                    tickets: 1
+                },
+                InventoryChoice {
+                    name: "the other".to_string(),
+                    tickets: 3
+                }
+            ]
+        );
     }
 
     #[test]
@@ -872,15 +980,27 @@ Choice is this. Accept? (Y/n) ";
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
-            String::from("this"), String::from("that"), String::from("the other")];
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
 
         let result = engine.pick_lru(&mut choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) ");
+        assert_eq!(
+            output,
+            "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) "
+        );
         assert_eq!(result, "that");
-        assert_eq!(choices,
-                   vec![String::from("this"), String::from("the other"), String::from("that")]);
+        assert_eq!(
+            choices,
+            vec![
+                String::from("this"),
+                String::from("the other"),
+                String::from("that")
+            ]
+        );
     }
 
     #[test]
@@ -892,15 +1012,24 @@ Choice is this. Accept? (Y/n) ";
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         engine.verbose = true;
         let mut choices = vec![
-            String::from("this"), String::from("that"), String::from("the other")];
+            String::from("this"),
+            String::from("that"),
+            String::from("the other"),
+        ];
 
         let result = engine.pick_lru(&mut choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
         assert_eq!(output, PICK_LRU_VERBOSE_EXPECTED_OUTPUT);
         assert_eq!(result, "this");
-        assert_eq!(choices,
-                   vec![String::from("that"), String::from("the other"), String::from("this")]);
+        assert_eq!(
+            choices,
+            vec![
+                String::from("that"),
+                String::from("the other"),
+                String::from("this")
+            ]
+        );
     }
 
     #[test]
@@ -909,9 +1038,22 @@ Choice is this. Accept? (Y/n) ";
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
-            LotteryChoice{name: "this".to_string(), tickets: 1, weight: 1},
-            LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
-            LotteryChoice{name: "the other".to_string(), tickets:3, weight: 9}];
+            LotteryChoice {
+                name: "this".to_string(),
+                tickets: 1,
+                weight: 1,
+            },
+            LotteryChoice {
+                name: "that".to_string(),
+                tickets: 2,
+                weight: 4,
+            },
+            LotteryChoice {
+                name: "the other".to_string(),
+                tickets: 3,
+                weight: 9,
+            },
+        ];
 
         let result = engine.pick_lottery(&mut choices);
 
@@ -921,9 +1063,23 @@ Choice is this. Accept? (Y/n) ";
         assert_eq!(
             choices,
             vec![
-                LotteryChoice{name: "this".to_string(), tickets: 0, weight: 1},
-                LotteryChoice{name: "that".to_string(), tickets: 6, weight: 4},
-                LotteryChoice{name: "the other".to_string(), tickets: 12, weight: 9}]);
+                LotteryChoice {
+                    name: "this".to_string(),
+                    tickets: 0,
+                    weight: 1
+                },
+                LotteryChoice {
+                    name: "that".to_string(),
+                    tickets: 6,
+                    weight: 4
+                },
+                LotteryChoice {
+                    name: "the other".to_string(),
+                    tickets: 12,
+                    weight: 9
+                }
+            ]
+        );
     }
 
     /// If the user says no to all the choices, rpick should print out an emoji and start over.
@@ -935,22 +1091,52 @@ Choice is this. Accept? (Y/n) ";
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let mut choices = vec![
-            LotteryChoice{name: "this".to_string(), tickets: 0, weight: 1},
-            LotteryChoice{name: "that".to_string(), tickets: 2, weight: 4},
-            LotteryChoice{name: "the other".to_string(), tickets:3, weight: 9}];
+            LotteryChoice {
+                name: "this".to_string(),
+                tickets: 0,
+                weight: 1,
+            },
+            LotteryChoice {
+                name: "that".to_string(),
+                tickets: 2,
+                weight: 4,
+            },
+            LotteryChoice {
+                name: "the other".to_string(),
+                tickets: 3,
+                weight: 9,
+            },
+        ];
 
         let result = engine.pick_lottery(&mut choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) 🤨\n\
-                            Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) ");
+        assert_eq!(
+            output,
+            "Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) 🤨\n\
+                            Choice is that. Accept? (Y/n) Choice is the other. Accept? (Y/n) "
+        );
         assert_eq!(result, "the other");
         assert_eq!(
             choices,
             vec![
-                LotteryChoice{name: "this".to_string(), tickets: 1, weight: 1},
-                LotteryChoice{name: "that".to_string(), tickets: 6, weight: 4},
-                LotteryChoice{name: "the other".to_string(), tickets: 0, weight: 9}]);
+                LotteryChoice {
+                    name: "this".to_string(),
+                    tickets: 1,
+                    weight: 1
+                },
+                LotteryChoice {
+                    name: "that".to_string(),
+                    tickets: 6,
+                    weight: 4
+                },
+                LotteryChoice {
+                    name: "the other".to_string(),
+                    tickets: 0,
+                    weight: 9
+                }
+            ]
+        );
     }
 
     #[test]
@@ -959,9 +1145,19 @@ Choice is this. Accept? (Y/n) ";
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![
-            WeightedChoice{name: "this".to_string(), weight: 1},
-            WeightedChoice{name: "that".to_string(), weight: 4},
-            WeightedChoice{name: "the other".to_string(), weight: 9}];
+            WeightedChoice {
+                name: "this".to_string(),
+                weight: 1,
+            },
+            WeightedChoice {
+                name: "that".to_string(),
+                weight: 4,
+            },
+            WeightedChoice {
+                name: "the other".to_string(),
+                weight: 9,
+            },
+        ];
 
         let result = engine.pick_weighted(&choices);
 
@@ -978,15 +1174,28 @@ Choice is this. Accept? (Y/n) ";
         let output = Vec::new();
         let mut engine = Engine::new(input.as_bytes(), output, FakeRng(0));
         let choices = vec![
-            WeightedChoice{name: "this".to_string(), weight: 1},
-            WeightedChoice{name: "that".to_string(), weight: 4},
-            WeightedChoice{name: "the other".to_string(), weight: 9}];
+            WeightedChoice {
+                name: "this".to_string(),
+                weight: 1,
+            },
+            WeightedChoice {
+                name: "that".to_string(),
+                weight: 4,
+            },
+            WeightedChoice {
+                name: "the other".to_string(),
+                weight: 9,
+            },
+        ];
 
         let result = engine.pick_weighted(&choices);
 
         let output = String::from_utf8(engine.output).expect("Not UTF-8");
-        assert_eq!(output, "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) \
-                            Choice is the other. Accept? (Y/n) 🤨\nChoice is this. Accept? (Y/n) ");
+        assert_eq!(
+            output,
+            "Choice is this. Accept? (Y/n) Choice is that. Accept? (Y/n) \
+                            Choice is the other. Accept? (Y/n) 🤨\nChoice is this. Accept? (Y/n) "
+        );
         assert_eq!(result, "this");
     }
 }

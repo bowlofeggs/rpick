@@ -1,7 +1,7 @@
 FROM registry.fedoraproject.org/fedora:31
 LABEL maintainer="Randy Barlow <bowlofeggs@fedoraproject.org>"
 
-RUN dnf install -y cargo clippy
+RUN dnf install -y cargo clippy rustfmt
 # This way we can cache all the build dependencies
 RUN cd /project && cargo build
 # This way we can cache all the development dependencies

@@ -16,13 +16,11 @@
 /// This module tests the CLI by running it as a subprocess and inspecting its outputs and
 /// resulting config file. This file includes tests from submodules, and also defines a few utility
 /// functions that they all use.
-
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::process::{Command, Stdio};
 
 use regex::Regex;
 use tempfile::NamedTempFile;
-
 
 mod error_handling;
 mod even;
@@ -31,7 +29,6 @@ mod inventory;
 mod lottery;
 mod lru;
 mod weighted;
-
 
 // Return which item rpick chose in the given stdout.
 //
@@ -48,7 +45,6 @@ fn get_pick(stdout: &str) -> String {
     captures.name("pick").unwrap().as_str().to_string()
 }
 
-
 // Run rpick with the given config, arguments, and stdin.
 //
 // # Arguments
@@ -62,8 +58,12 @@ fn get_pick(stdout: &str) -> String {
 //
 // Return stdout from rpick, and the contents of the config after running, so that tests can perform
 // further assertions.
-fn test_rpick_with_config(config: &str, args: &mut Vec<&str>, stdin: &str, expected_success: bool)
-        -> (String, String) {
+fn test_rpick_with_config(
+    config: &str,
+    args: &mut Vec<&str>,
+    stdin: &str,
+    expected_success: bool,
+) -> (String, String) {
     let mut args = args.clone();
     let mut config_f = NamedTempFile::new().expect("Failed to open temp file");
     write!(config_f, "{}", config).expect("Could not write config");
@@ -73,11 +73,14 @@ fn test_rpick_with_config(config: &str, args: &mut Vec<&str>, stdin: &str, expec
     let stdout = test_rpick(&args, stdin, expected_success);
 
     let mut config_contents = String::new();
-    config_f.seek(SeekFrom::Start(0)).expect("Could not seek file");
-    config_f.read_to_string(&mut config_contents).expect("Could not read config");
+    config_f
+        .seek(SeekFrom::Start(0))
+        .expect("Could not seek file");
+    config_f
+        .read_to_string(&mut config_contents)
+        .expect("Could not read config");
     (stdout, config_contents)
 }
-
 
 // Run rpick with the given arguments and stdin.
 //
@@ -91,10 +94,16 @@ fn test_rpick_with_config(config: &str, args: &mut Vec<&str>, stdin: &str, expec
 //
 // Return stdout from rpick, so that tests can perform further assertions.
 fn test_rpick(args: &[&str], stdin: &str, expected_success: bool) -> String {
-    let mut rpick = Command::new("target/debug/rpick").args(args)
-        .stdin(Stdio::piped()).stdout(Stdio::piped()).spawn().expect("Failed to spawn rpick");
+    let mut rpick = Command::new("target/debug/rpick")
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to spawn rpick");
     let stdin_pipe = rpick.stdin.as_mut().expect("failed to get stdin");
-    stdin_pipe.write_all(stdin.as_bytes()).expect("failed to write to stdin");
+    stdin_pipe
+        .write_all(stdin.as_bytes())
+        .expect("failed to write to stdin");
 
     let proc = rpick.wait_with_output().expect("Failed to spawn rpick");
 
