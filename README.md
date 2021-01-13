@@ -1,5 +1,6 @@
 ![Audit](https://github.com/bowlofeggs/rpick/workflows/Audit/badge.svg?branch=master)
 ![CI](https://github.com/bowlofeggs/rpick/workflows/CI/badge.svg?branch=master)
+![Release](https://github.com/bowlofeggs/rpick/workflows/Release/badge.svg)
 
 ```rpick``` is a command line tool that helps you to pick items from a list, using
 configurable algorithms.
