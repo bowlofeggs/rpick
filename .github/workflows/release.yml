@@ -43,7 +43,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./target/release/rpick
-          asset_name: "rpick-${{ github.ref }}-x86_64-unknown-linux-gnu"
+          asset_name: rpick-x86_64-unknown-linux-gnu
           asset_content_type: application/octet-stream
       - name: Upload Rust docs
         id: upload_rust_docs
@@ -53,7 +53,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./target/rust_docs.tar.bz2
-          asset_name: "rpick-${{ github.ref }}-docs.tar.bz2"
+          asset_name: docs.tar.bz2
           asset_content_type: application/octet-stream
       - name: Upload CHANGELOG.md
         id: upload_changelog
@@ -63,7 +63,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: CHANGELOG.md
-          asset_name: "rpick-${{ github.ref }}-CHANGELOG.md"
+          asset_name: CHANGELOG.md
           asset_content_type: text/markdown
       - name: Upload README.md
         id: upload_readme
@@ -73,7 +73,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: README.md
-          asset_name: "rpick-${{ github.ref }}-README.md"
+          asset_name: README.md
           asset_content_type: text/markdown
       - name: Publish to crates.io
         env:
