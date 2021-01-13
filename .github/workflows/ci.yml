@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check -l -v
+      - name: Cache compilation assets
+        uses: actions/cache@v2
+        env:
+          cache-name: rust
+        with:
+          path: |
+            target
+            /usr/share/rust/.cargo
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install cargo audit
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-audit
+      - name: Run audit check
+        uses: actions-rs/cargo@v1
+        with:
+          command: audit
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-targets --all-features -- -D warnings
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+      - name: Run cargo doc
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
