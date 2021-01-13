@@ -1,3 +1,5 @@
+![Audit](https://github.com/bowlofeggs/rpick/workflows/Audit/badge.svg?branch=master)
+
 ```rpick``` is a command line tool that helps you to pick items from a list, using
 configurable algorithms.
 
