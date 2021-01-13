@@ -1,3 +1,9 @@
+# 0.7.1
+
+* Updated several dependencies.
+* Moved the project to [GitHub](https://github.com/bowlofeggs/rpick).
+
+
 # 0.7.0
 
 * [#43](https://gitlab.com/bowlofeggs/rpick/-/merge_requests/43) There is now a ```--verbose```

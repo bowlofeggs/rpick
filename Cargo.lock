@@ -604,7 +604,7 @@ dependencies = [
 
 [[package]]
 name = "rpick"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "dirs 3.0.1",
  "prettytable-rs",
