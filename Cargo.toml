@@ -29,3 +29,6 @@ assert_cmd = "1"
 rand = {version = "0.8", features = ["small_rng"]}
 regex = "1"
 tempfile = "3"
+
+[profile.release]
+lto = true

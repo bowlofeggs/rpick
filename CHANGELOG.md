@@ -2,6 +2,7 @@
 
 * [#19](https://github.com/bowlofeggs/rpick/issues/19) Update rand to 0.8.2.
 * [#20](https://github.com/bowlofeggs/rpick/issues/20) `cargo test --release` now works.
+* [#22](https://github.com/bowlofeggs/rpick/pull/22) Use link time optimization for release builds.
 
 
 # 0.7.1
