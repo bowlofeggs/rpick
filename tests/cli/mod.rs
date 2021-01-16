@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Randy Barlow
+ * Copyright © 2020-2021 Randy Barlow
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 /// resulting config file. This file includes tests from submodules, and also defines a few utility
 /// functions that they all use.
 use std::io::{Read, Seek, SeekFrom, Write};
-use std::process::{Command, Stdio};
 
+use assert_cmd::Command;
 use regex::Regex;
 use tempfile::NamedTempFile;
 
@@ -94,19 +94,15 @@ fn test_rpick_with_config(
 //
 // Return stdout from rpick, so that tests can perform further assertions.
 fn test_rpick(args: &[&str], stdin: &str, expected_success: bool) -> String {
-    let mut rpick = Command::new("target/debug/rpick")
-        .args(args)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("Failed to spawn rpick");
-    let stdin_pipe = rpick.stdin.as_mut().expect("failed to get stdin");
-    stdin_pipe
-        .write_all(stdin.as_bytes())
-        .expect("failed to write to stdin");
+    let mut rpick = Command::cargo_bin("rpick").unwrap();
 
-    let proc = rpick.wait_with_output().expect("Failed to spawn rpick");
+    let mut assert = rpick.args(args).write_stdin(stdin).assert();
 
-    assert_eq!(proc.status.success(), expected_success);
-    String::from_utf8(proc.stdout).unwrap()
+    if expected_success {
+        assert = assert.success();
+    } else {
+        assert = assert.failure();
+    }
+
+    String::from_utf8(assert.get_output().stdout.clone()).unwrap()
 }

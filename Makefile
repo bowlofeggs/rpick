@@ -1,4 +1,4 @@
-.PHONY: help check audit build clean clippy doc fmt test
+.PHONY: help check audit build clean clippy doc fmt test test_release
 
 # Where the project is mounted inside the container
 podman_mount_dir = /rpick
@@ -12,7 +12,7 @@ podman_run = podman run --network=host --rm -it $(podman_volume) -e RPICK_CONFIG
 help:  ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-check: fmt audit build clippy test doc  ## Run the full set of CI checks
+check: fmt audit test_release build clippy test doc  ## Run the full set of CI checks
 
 audit: container  ## Run cargo audit
 	$(podman_run) cargo audit
@@ -46,3 +46,6 @@ shell: container  ## Run bash inside the development container
 
 test: container  ## Run cargo test
 	$(podman_run) cargo test
+
+test_release: container  # Run cargo test --release
+	$(podman_run) cargo test --release

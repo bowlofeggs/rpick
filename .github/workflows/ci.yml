@@ -41,6 +41,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: audit
+      # Test with the release flag before we have a debug build. This ensures that
+      # https://github.com/bowlofeggs/rpick/issues/20 doesn't happen again.
+      - name: Run cargo test --release
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
       - name: Run cargo build
         uses: actions-rs/cargo@v1
         with:

@@ -25,6 +25,7 @@ structopt = "0.3"
 term = "0.5"
 
 [dev-dependencies]
+assert_cmd = "1"
 rand = {version = "0.8", features = ["small_rng"]}
 regex = "1"
 tempfile = "3"
