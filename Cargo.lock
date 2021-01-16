@@ -647,7 +647,7 @@ dependencies = [
 
 [[package]]
 name = "rpick"
-version = "0.7.1"
+version = "0.7.2"
 dependencies = [
  "assert_cmd",
  "dirs 3.0.1",

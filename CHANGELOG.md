@@ -1,3 +1,9 @@
+# 0.7.2
+
+* [#19](https://github.com/bowlofeggs/rpick/issues/19) Update rand to 0.8.2.
+* [#20](https://github.com/bowlofeggs/rpick/issues/20) `cargo test --release` now works.
+
+
 # 0.7.1
 
 * Updated several dependencies.
