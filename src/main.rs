@@ -82,7 +82,7 @@ fn get_config_file_path(args: &Cli) -> String {
     match &args.config {
         Some(config) => config.clone(),
         None => {
-            let config_dir = dirs::preference_dir().expect("Unable to find config dir.");
+            let config_dir = dirs_next::config_dir().expect("Unable to find config dir.");
             let config_file = config_dir.join(CONFIG_FILE);
             String::from(config_file.to_str().expect("Unable to determine config."))
         }
