@@ -22,7 +22,7 @@ serde = {version = "1.0", features = ["derive"]}
 serde_yaml = "0.8"
 statrs = "0.13"
 structopt = "0.3"
-term = "0.5"
+term = "0.7"
 
 [dev-dependencies]
 assert_cmd = "1"
