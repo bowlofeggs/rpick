@@ -1,6 +1,6 @@
 [package]
 name = "rpick"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["Randy Barlow <randy@electronsweatshop.com>"]
 license = "GPL-3.0"
 readme = "README.md"
@@ -22,10 +22,11 @@ serde = {version = "1.0", features = ["derive"]}
 serde_yaml = "0.8"
 statrs = "0.13"
 structopt = "0.3"
-term = "0.5"
 
 [dev-dependencies]
+approx = "0.4"
 assert_cmd = "1"
+mockall = "0.9"
 rand = {version = "0.8", features = ["small_rng"]}
 regex = "1"
 tempfile = "3"

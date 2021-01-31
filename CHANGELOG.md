@@ -1,3 +1,11 @@
+# 0.8.0
+
+This is a backwards breaking change in the crate.
+
+* Redesigned the Engine API. It now requires an instance of a struct that implements the
+  rpick::ui::UI trait. This trait provides a more natural way to interact with the library than
+  streams of bytes.
+
 # 0.7.2
 
 * [#19](https://github.com/bowlofeggs/rpick/issues/19) Update rand to 0.8.2.
