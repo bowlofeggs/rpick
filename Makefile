@@ -17,26 +17,26 @@ check: fmt audit test_release build clippy test doc  ## Run the full set of CI c
 audit: container  ## Run cargo audit
 	$(podman_run) cargo audit
 
-build: container  ## Run cargo build
-	$(podman_run) cargo build
+build:  ## Run cargo build
+	cargo build
 
 clean:  ## Clean build artifacts
-	$(podman_run) cargo clean || rm -rf target
+	cargo clean || rm -rf target
 	podman rmi $(podman_tag) || true
 	rm -rf $(CURDIR)/.cache
 
-clippy: container  ## Run cargo clippy
-	$(podman_run) cargo clippy --all-targets --all-features -- -D warnings
+clippy:  ## Run cargo clippy
+	cargo clippy --all-targets --all-features -- -D warnings
 
 container:  ## Build the container
 	mkdir -p $(CURDIR)/.cache
 	podman build --pull -t $(podman_tag) $(podman_volume) --force-rm=true $(CURDIR)
 
-doc: container  ## Run cargo doc
-	$(podman_run) cargo doc --no-deps
+doc:  ## Run cargo doc
+	cargo doc --no-deps
 
-fmt: container  ## Run cargo fmt
-	$(podman_run) cargo fmt -- --check -v
+fmt:  ## Run cargo fmt
+	cargo fmt -- --check -v
 
 license: container  ## Run cargo-license
 	$(podman_run) cargo license
@@ -44,8 +44,8 @@ license: container  ## Run cargo-license
 shell: container  ## Run bash inside the development container
 	$(podman_run) bash
 
-test: container  ## Run cargo test
-	$(podman_run) cargo test
+test:  ## Run cargo test
+	cargo test
 
-test_release: container  # Run cargo test --release
-	$(podman_run) cargo test --release
+test_release:  # Run cargo test --release
+	cargo test --release
