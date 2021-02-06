@@ -14,12 +14,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //!
 //! This module defines the Engine, the core of the rpick crate.
 use std::collections::BTreeMap;
-use std::{error, fmt};
 
 use rand::seq::SliceRandom;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use statrs::distribution::Univariate;
+use thiserror::Error;
 
 use crate::{config, ui};
 
@@ -69,7 +69,7 @@ where
         &mut self,
         config: &mut BTreeMap<String, config::ConfigCategory>,
         category: String,
-    ) -> Result<String, Box<dyn error::Error>> {
+    ) -> Result<String, PickError> {
         let config_category = config.get_mut(&category[..]);
         match config_category {
             Some(category) => match category {
@@ -83,10 +83,7 @@ where
                 config::ConfigCategory::LRU { choices } => Ok(self.pick_lru(choices)),
                 config::ConfigCategory::Weighted { choices } => Ok(self.pick_weighted(choices)),
             },
-            None => Err(Box::new(ValueError::new(format!(
-                "Category {} not found in config.",
-                category
-            )))),
+            None => Err(PickError::CategoryNotFound(category)),
         }
     }
 
@@ -373,30 +370,12 @@ where
     }
 }
 
-/// Returned in the event that an invalid parameter was used in the API.
-#[derive(Debug)]
-struct ValueError {
-    message: String,
+/// Define the errors that can be returned from [`Engine::pick`].
+#[derive(Debug, Error)]
+pub enum PickError {
+    #[error("The category `{0}` was not found in the given config.")]
+    CategoryNotFound(String),
 }
-
-impl ValueError {
-    /// Construct a new ValueError.
-    ///
-    /// # Arguments
-    ///
-    /// * `message` - The error message to accompany the ValueError.
-    fn new(message: String) -> ValueError {
-        ValueError { message }
-    }
-}
-
-impl fmt::Display for ValueError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl error::Error for ValueError {}
 
 #[cfg(test)]
 mod tests {
@@ -505,7 +484,7 @@ mod tests {
             Err(error) => {
                 assert_eq!(
                     format!("{}", error),
-                    "Category does not exist not found in config."
+                    "The category `does not exist` was not found in the given config."
                 );
             }
         }

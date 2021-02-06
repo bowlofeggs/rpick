@@ -28,7 +28,7 @@ test:
 #[test]
 // The user should get a useful error message if the requested category does not exist.
 fn category_not_found() {
-    let expected_output = "Category does_not_exist not found in config.\n";
+    let expected_output = "The category `does_not_exist` was not found in the given config.\n";
 
     let (stdout, config_contents) = super::test_rpick_with_config(
         CATEGORY_NOT_FOUND_CONFIG,
