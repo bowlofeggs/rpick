@@ -16,7 +16,7 @@
 /// Assert correct operation of the lottery model.
 use std::collections::{BTreeMap, HashSet};
 
-use rpick::ConfigCategory;
+use rpick::config::ConfigCategory;
 
 const CONFIG: &str = "
 ---

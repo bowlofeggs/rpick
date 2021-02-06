@@ -35,15 +35,15 @@ struct CliArgs {
 fn main() {
     let args = CliArgs::from_args();
     let config_path = get_config_file_path(&args);
-    let config = rpick::read_config(&config_path);
+    let config = rpick::config::read_config(&config_path);
     match config {
         Ok(config) => {
             let mut config = config;
             let ui = cli::CLI::new(args.verbose);
 
-            let mut engine = rpick::Engine::new(&ui);
+            let mut engine = rpick::engine::Engine::new(&ui);
             match engine.pick(&mut config, args.category) {
-                Ok(_) => match rpick::write_config(&config_path, config) {
+                Ok(_) => match rpick::config::write_config(&config_path, config) {
                     Ok(_) => {}
                     Err(error) => {
                         println!("{}", error);

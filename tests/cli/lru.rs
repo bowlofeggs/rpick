@@ -16,7 +16,7 @@
 /// Assert correct operation of the lru model.
 use std::collections::BTreeMap;
 
-use rpick::ConfigCategory;
+use rpick::config::ConfigCategory;
 
 const CONFIG: &str = "
 ---

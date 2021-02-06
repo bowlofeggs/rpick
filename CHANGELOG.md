@@ -5,6 +5,8 @@ This is a backwards breaking change in the crate.
 * Redesigned the Engine API. It now requires an instance of a struct that implements the
   rpick::ui::UI trait. This trait provides a more natural way to interact with the library than
   streams of bytes.
+* The Engine and its Error have been moved into a `rpick::engine` module.
+* The configuration structs, enums, and functions have been moved into a `rpick::config` module.
 
 # 0.7.2
 

@@ -16,7 +16,7 @@
 /// Test the even model.
 use std::collections::{BTreeMap, HashSet};
 
-use rpick::ConfigCategory;
+use rpick::config::ConfigCategory;
 
 const CONFIG: &str = "
 ---
