@@ -1,3 +1,9 @@
+# 0.8.1
+
+* Update rand_core for [RUSTSEC-2021-0023](https://rustsec.org/advisories/RUSTSEC-2021-0023).
+* Update other dependencies.
+
+
 # 0.8.0
 
 This is a backwards breaking change in the crate.
