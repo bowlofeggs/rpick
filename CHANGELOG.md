@@ -1,3 +1,10 @@
+# 0.8.2
+
+* Update generic arracy for
+  [RUSTSEC-2020-0146](https://rustsec.org/advisories/RUSTSEC-2020-0146.html)
+* Update other dependencies.
+
+
 # 0.8.1
 
 * Update rand_core for [RUSTSEC-2021-0023](https://rustsec.org/advisories/RUSTSEC-2021-0023).
