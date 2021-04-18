@@ -39,7 +39,7 @@ fn pick() {
     // Assert that the lru model moves the picked item into last place
     let mut expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
-    if let ConfigCategory::LRU { choices } = &mut expected_config.get_mut("lru").unwrap() {
+    if let ConfigCategory::Lru { choices } = &mut expected_config.get_mut("lru").unwrap() {
         let pick = choices.remove(0);
         choices.push(pick);
     }

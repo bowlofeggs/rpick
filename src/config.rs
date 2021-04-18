@@ -99,7 +99,7 @@ pub enum ConfigCategory {
     ///
     /// * `choices` - The list of choices to pick from.
     Inventory { choices: Vec<InventoryChoice> },
-    /// The LRU variant picks the Least Recently Used item from the list of choices. The least
+    /// The Lru variant picks the Least Recently Used item from the list of choices. The least
     /// recently used choice is found at the beginning of the list. Once a choice has been
     /// accepted, it is moved to the end of the list.
     ///
@@ -107,7 +107,7 @@ pub enum ConfigCategory {
     ///
     /// * `choices` - The list of choices to pick from.
     #[serde(rename = "lru")]
-    LRU { choices: Vec<String> },
+    Lru { choices: Vec<String> },
     /// The Lottery variant uses a weighted distribution to pick items, with each items chances
     /// being tied to how many tickets it has. When a choice is accepted, that choice's ticket
     /// count is set to 0, and every choice not chosen receives its weight in additional tickets.

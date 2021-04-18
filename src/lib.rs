@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! /// picks.
 //! struct Interface {};
 //!
-//! impl rpick::ui::UI for Interface {
+//! impl rpick::ui::Ui for Interface {
 //!     fn call_display_table(&self) -> bool { false }
 //!
 //!     fn display_table(&self, table: &rpick::ui::Table) {}

@@ -39,7 +39,7 @@ fn main() {
     match config {
         Ok(config) => {
             let mut config = config;
-            let ui = cli::CLI::new(args.verbose);
+            let ui = cli::Cli::new(args.verbose);
 
             let mut engine = rpick::engine::Engine::new(&ui);
             match engine.pick(&mut config, args.category) {
