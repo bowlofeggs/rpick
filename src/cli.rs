@@ -18,20 +18,20 @@ use prettytable::{format, Cell, Row, Table};
 
 use rpick::ui;
 
-/// This implements the UI trait for the rpick engine.
-pub struct CLI {
+/// This implements the Ui trait for the rpick engine.
+pub struct Cli {
     /// If true, print out the chance tables.
     verbose: bool,
 }
 
-impl CLI {
-    /// Construct a new CLI.
+impl Cli {
+    /// Construct a new Cli.
     ///
     /// # Arguments
     ///
-    /// * `verbose`: If true, the CLI will print out chance tables.
+    /// * `verbose`: If true, the Cli will print out chance tables.
     pub fn new(verbose: bool) -> Self {
-        CLI { verbose }
+        Cli { verbose }
     }
 
     /// Convert a slice of Cells into a [`prettytable::Row`].
@@ -59,7 +59,7 @@ impl CLI {
     }
 }
 
-impl ui::UI for CLI {
+impl ui::Ui for Cli {
     /// Return `self.verbose`.
     fn call_display_table(&self) -> bool {
         self.verbose
@@ -70,12 +70,12 @@ impl ui::UI for CLI {
         let mut t = Table::new();
         t.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
 
-        t.set_titles(CLI::convert_row(&table.header, false));
+        t.set_titles(Cli::convert_row(&table.header, false));
 
         for row in &table.rows {
-            t.add_row(CLI::convert_row(&row.cells, row.chosen));
+            t.add_row(Cli::convert_row(&row.cells, row.chosen));
         }
-        t.add_row(CLI::convert_row(&table.footer, false));
+        t.add_row(Cli::convert_row(&table.footer, false));
 
         println!();
         t.printstd();

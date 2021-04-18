@@ -10,9 +10,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
-//! # The UI Trait
+//! # The Ui Trait
 //!
-//! The UI Trait defines an interface for bridging human interactions with the rpick crate.
+//! The Ui Trait defines an interface for bridging human interactions with the rpick crate.
 
 #[cfg(test)]
 use mockall::automock;
@@ -84,10 +84,10 @@ pub struct Table<'a> {
 ///
 /// This is how rpick interacts with users.
 #[cfg_attr(test, automock)]
-pub trait UI {
-    /// If this method returns `true`, [`UI::display_table`] will be called by the engine.
+pub trait Ui {
+    /// If this method returns `true`, [`Ui::display_table`] will be called by the engine.
     ///
-    /// This is a small optimization - generating tables that the UI isn't going to show to the
+    /// This is a small optimization - generating tables that the Ui isn't going to show to the
     /// user or otherwise use is a waste of compute time. If the table isn't going to get used,
     /// this method should return `false`.
     fn call_display_table(&self) -> bool;

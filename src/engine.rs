@@ -27,7 +27,7 @@ use crate::{config, ui};
 ///
 /// # Attributes
 ///
-/// * `ui` - This is a struct that implements the [`ui::UI`] trait.
+/// * `ui` - This is a struct that implements the [`ui::Ui`] trait.
 /// * `rng` - This must be a random number generator that implements the [`rand::RngCore`]
 ///           trait.
 pub struct Engine<'ui, U> {
@@ -37,13 +37,13 @@ pub struct Engine<'ui, U> {
 
 impl<'a, 'ui, U> Engine<'ui, U>
 where
-    U: ui::UI,
+    U: ui::Ui,
 {
     /// Instantiate an Engine.
     ///
     /// # Arguments
     ///
-    /// * `ui` - This is a struct that implements the [`ui::UI`] trait. It is how rpick will
+    /// * `ui` - This is a struct that implements the [`ui::Ui`] trait. It is how rpick will
     ///     interact with the caller.
     pub fn new(ui: &'ui U) -> Engine<U> {
         let rng = rand::thread_rng();
@@ -80,7 +80,7 @@ where
                 } => Ok(self.pick_gaussian(choices, *stddev_scaling_factor)),
                 config::ConfigCategory::Inventory { choices } => Ok(self.pick_inventory(choices)),
                 config::ConfigCategory::Lottery { choices } => Ok(self.pick_lottery(choices)),
-                config::ConfigCategory::LRU { choices } => Ok(self.pick_lru(choices)),
+                config::ConfigCategory::Lru { choices } => Ok(self.pick_lru(choices)),
                 config::ConfigCategory::Weighted { choices } => Ok(self.pick_weighted(choices)),
             },
             None => Err(PickError::CategoryNotFound(category)),
@@ -169,7 +169,7 @@ where
         choices[index].name.clone()
     }
 
-    /// Run the LRU model for the given choices. When the user accepts a choice, move that choice to
+    /// Run the Lru model for the given choices. When the user accepts a choice, move that choice to
     /// the end of the choices Vector and return.
     fn pick_lru(&mut self, choices: &mut Vec<String>) -> String {
         for (index, choice) in choices.iter().enumerate() {
@@ -424,7 +424,7 @@ mod tests {
 
     #[test]
     fn test_get_consent() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_prompt_choice()
             .with(predicate::in_iter(vec![
                 "you want this",
@@ -440,7 +440,7 @@ mod tests {
 
     #[test]
     fn test_pick() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(2).returning(|| false);
         ui.expect_prompt_choice()
             .with(predicate::in_iter(vec!["that", "this"]))
@@ -466,7 +466,7 @@ mod tests {
 
     #[test]
     fn test_pick_nonexistant_category() {
-        let ui = ui::MockUI::new();
+        let ui = ui::MockUi::new();
         let mut engine = Engine::new(&ui);
         let choices = vec![
             String::from("this"),
@@ -492,7 +492,7 @@ mod tests {
 
     #[test]
     fn test_pick_even() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| false);
         ui.expect_prompt_choice()
             .with(predicate::eq("this"))
@@ -521,7 +521,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_pick_gaussian() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| false);
         ui.expect_prompt_choice()
             .with(predicate::eq("that"))
@@ -558,7 +558,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_pick_gaussian_verbose() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| true);
         ui.expect_display_table()
             .withf(|t| {
@@ -612,7 +612,7 @@ mod tests {
 
     #[test]
     fn test_pick_inventory() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         let mut counter = 0;
         ui.expect_call_display_table().times(4).returning(|| false);
         ui.expect_info()
@@ -671,7 +671,7 @@ mod tests {
 
     #[test]
     fn test_pick_inventory_verbose() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| true);
         ui.expect_display_table()
             .withf(|t| {
@@ -755,7 +755,7 @@ mod tests {
     #[test]
     fn test_pick_lru() {
         // The user says no to the first one and yes to the second.
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(2).returning(|| false);
         ui.expect_prompt_choice()
             .with(predicate::in_iter(vec!["this", "that"]))
@@ -785,7 +785,7 @@ mod tests {
     #[test]
     /// Test pick_lru() with the verbose flag set
     fn test_pick_lru_verbose() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| true);
         ui.expect_display_table()
             .withf(|t| {
@@ -838,7 +838,7 @@ mod tests {
 
     #[test]
     fn test_pick_lottery() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| false);
         ui.expect_prompt_choice()
             .with(predicate::eq("this"))
@@ -894,7 +894,7 @@ mod tests {
     /// chance of being picked.
     #[test]
     fn test_pick_lottery_no_to_all_one_no_chance() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         let mut counter = 0;
         ui.expect_call_display_table().times(4).returning(|| false);
         ui.expect_info()
@@ -959,7 +959,7 @@ mod tests {
 
     #[test]
     fn test_pick_weighted() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         ui.expect_call_display_table().times(1).returning(|| false);
         ui.expect_prompt_choice()
             .with(predicate::eq("this"))
@@ -991,7 +991,7 @@ mod tests {
     /// expressing disapproval.
     #[test]
     fn test_pick_weighted_no_to_all() {
-        let mut ui = ui::MockUI::new();
+        let mut ui = ui::MockUi::new();
         let mut counter = 0;
         ui.expect_call_display_table().times(4).returning(|| false);
         ui.expect_info()
