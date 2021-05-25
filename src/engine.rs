@@ -291,9 +291,9 @@ where
         let footer: Vec<ui::Cell> = vec!["Total".into(), total_chance.into()];
 
         self.ui.display_table(&ui::Table {
+            footer,
             header,
             rows,
-            footer,
         });
     }
 
@@ -324,9 +324,9 @@ where
         let footer = vec![];
 
         self.ui.display_table(&ui::Table {
+            footer,
             header,
             rows,
-            footer,
         });
     }
 
@@ -363,9 +363,9 @@ where
         let footer: Vec<ui::Cell> = vec!["Total".into(), total.into(), 100.00.into()];
 
         self.ui.display_table(&ui::Table {
+            footer,
             header,
             rows,
-            footer,
         });
     }
 }
