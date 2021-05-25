@@ -1,3 +1,10 @@
+# 0.8.4
+
+* Fix a new lint for Rust 1.52.
+* Update to a new statrs.
+* Update other dependencies.
+
+
 # 0.8.3
 
 * Update dependencies.
