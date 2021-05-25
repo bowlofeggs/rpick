@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
-use statrs::distribution::Univariate;
+use statrs::distribution::ContinuousCDF;
 use thiserror::Error;
 
 use crate::{config, ui};
