@@ -25,7 +25,7 @@ structopt = "0.3"
 thiserror = "1"
 
 [dev-dependencies]
-approx = "0.4"
+approx = "0.5"
 assert_cmd = "1"
 mockall = "0.9"
 rand = {version = "0.8", features = ["small_rng"]}
