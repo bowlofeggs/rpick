@@ -15,7 +15,8 @@ help:  ## Show this help
 check: fmt audit test_release build clippy test doc  ## Run the full set of CI checks
 
 audit: container  ## Run cargo audit
-	$(podman_run) cargo audit
+	# RUSTSEC-2021-0070 can be fixed when a new statrs is released
+	$(podman_run) cargo audit --ignore RUSTSEC-2021-0070
 
 build:  ## Run cargo build
 	cargo build
