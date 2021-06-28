@@ -27,7 +27,7 @@ thiserror = "1"
 [dev-dependencies]
 approx = "0.5"
 assert_cmd = "1"
-mockall = "0.9"
+mockall = "0.10"
 rand = {version = "0.8", features = ["small_rng"]}
 regex = "1"
 tempfile = "3"
