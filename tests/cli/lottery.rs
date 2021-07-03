@@ -51,7 +51,7 @@ fn pick() {
         .cloned()
         .collect();
     let pick = super::get_pick(&stdout);
-    assert_eq!(expected_values.contains(pick.as_str()), true);
+    assert!(expected_values.contains(pick.as_str()));
     // Assert that the lottery model removes the tickets on the picked item, and gives more tickets
     // to the ones that weren't picked.
     let mut expected_config: BTreeMap<String, ConfigCategory> =

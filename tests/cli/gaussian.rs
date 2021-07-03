@@ -40,7 +40,7 @@ fn pick() {
         .cloned()
         .collect();
     let pick = super::get_pick(&stdout);
-    assert_eq!(expected_values.contains(pick.as_str()), true);
+    assert!(expected_values.contains(pick.as_str()));
     // Assert that the gaussian model moves the picked item into last place
     let mut expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");

@@ -46,5 +46,5 @@ fn pick() {
         .cloned()
         .collect();
     let pick = super::get_pick(&stdout);
-    assert_eq!(expected_values.contains(pick.as_str()), true);
+    assert!(expected_values.contains(pick.as_str()));
 }

@@ -434,8 +434,8 @@ mod tests {
             .returning(|x| !x.contains("don't"));
         let mut engine = Engine::new(&ui);
 
-        assert_eq!(engine.get_consent("you want this"), true);
-        assert_eq!(engine.get_consent("you don't want this"), false);
+        assert!(engine.get_consent("you want this"));
+        assert!(!engine.get_consent("you don't want this"));
     }
 
     #[test]
