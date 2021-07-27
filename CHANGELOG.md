@@ -1,3 +1,8 @@
+# 0.8.5
+
+* Update dependencies.
+
+
 # 0.8.4
 
 * Fix a new lint for Rust 1.52.
