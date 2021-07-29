@@ -41,7 +41,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: audit
-          args: --ignore RUSTSEC-2021-0070
       # Test with the release flag before we have a debug build. This ensures that
       # https://github.com/bowlofeggs/rpick/issues/20 doesn't happen again.
       - name: Run cargo test --release
