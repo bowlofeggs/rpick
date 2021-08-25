@@ -174,7 +174,7 @@ where
     fn pick_lru(&mut self, choices: &mut Vec<String>) -> String {
         for (index, choice) in choices.iter().enumerate() {
             if self.ui.call_display_table() {
-                self.display_lru_table(index, &choices);
+                self.display_lru_table(index, choices);
             }
 
             if self.get_consent(&choice[..]) {

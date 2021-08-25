@@ -41,7 +41,7 @@ mod weighted;
 // The item that rpick chose.
 fn get_pick(stdout: &str) -> String {
     let re = Regex::new(r"Choice is (?P<pick>.*)\.").unwrap();
-    let captures = re.captures(&stdout).unwrap();
+    let captures = re.captures(stdout).unwrap();
     captures.name("pick").unwrap().as_str().to_string()
 }
 

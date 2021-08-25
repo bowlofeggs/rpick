@@ -50,7 +50,7 @@ fn pick() {
     assert!(expected_values.contains(pick.as_str()));
     // Assert that the inventory model reduces the tickets on the picked item
     let mut expected_config: BTreeMap<String, ConfigCategory> =
-        serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
+        serde_yaml::from_str(CONFIG).expect("Could not parse yaml");
     if let ConfigCategory::Inventory { choices } =
         &mut expected_config.get_mut("inventory").unwrap()
     {

@@ -55,7 +55,7 @@ fn pick() {
     // Assert that the lottery model removes the tickets on the picked item, and gives more tickets
     // to the ones that weren't picked.
     let mut expected_config: BTreeMap<String, ConfigCategory> =
-        serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
+        serde_yaml::from_str(CONFIG).expect("Could not parse yaml");
     if let ConfigCategory::Lottery { choices } = &mut expected_config.get_mut("lottery").unwrap() {
         for choice in choices.iter_mut() {
             if choice.name == pick {

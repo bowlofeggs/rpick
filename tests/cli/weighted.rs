@@ -41,7 +41,7 @@ fn pick() {
         super::test_rpick_with_config(CONFIG, &mut vec!["weighted"], "y\n", true);
 
     let expected_config: BTreeMap<String, ConfigCategory> =
-        serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
+        serde_yaml::from_str(CONFIG).expect("Could not parse yaml");
     let parsed_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(&config_contents).expect("Could not parse yaml");
     // The weighted config does not modify the config file

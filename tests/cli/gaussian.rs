@@ -43,7 +43,7 @@ fn pick() {
     assert!(expected_values.contains(pick.as_str()));
     // Assert that the gaussian model moves the picked item into last place
     let mut expected_config: BTreeMap<String, ConfigCategory> =
-        serde_yaml::from_str(&CONFIG).expect("Could not parse yaml");
+        serde_yaml::from_str(CONFIG).expect("Could not parse yaml");
     if let ConfigCategory::Gaussian {
         choices,
         stddev_scaling_factor: _,
