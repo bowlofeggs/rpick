@@ -1,3 +1,8 @@
+# 0.8.6
+
+* Update dependencies.
+
+
 # 0.8.5
 
 * Update dependencies.
