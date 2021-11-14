@@ -11,7 +11,7 @@ description = """\
               restaurant you haven't been to in a while, or an album to listen to."""
 keywords = ["random", "game"]
 categories = ["command-line-utilities", "games"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 dirs-next = "2"
