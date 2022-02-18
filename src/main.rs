@@ -14,26 +14,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //!
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
 
-use structopt::StructOpt;
+use clap::Parser;
 
 mod cli;
 
 const CONFIG_FILE: &str = "rpick.yml";
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct CliArgs {
     /// The category you wish to pick from.
     category: String,
-    #[structopt(short, long, env = "RPICK_CONFIG")]
+    #[clap(short, long, env = "RPICK_CONFIG")]
     /// A path to the config file you wish to use.
     config: Option<String>,
-    #[structopt(short, long)]
+    #[clap(short, long)]
     /// Print more information about the pick.
     verbose: bool,
 }
 
 fn main() {
-    let args = CliArgs::from_args();
+    let args = CliArgs::parse();
     let config_path = get_config_file_path(&args);
     let config = rpick::config::read_config(&config_path);
     match config {
