@@ -1,3 +1,8 @@
+# 0.8.9
+
+* Fix a publishing error.
+
+
 # 0.8.8
 
 * Update dependencies.
