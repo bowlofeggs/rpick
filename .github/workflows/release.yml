@@ -81,3 +81,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
+      - name: Configure Cargo registry for deschamps
+        run: |
+          echo -e '[registries.deschamps]\nindex = "https://git.deschamps.network/crates/index.git"' >> ~/.cargo/config
+      - name: Publish to deschamps
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.DESCHAMPS_CARGO_REGISTRY_TOKEN }}
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --registry deschamps
