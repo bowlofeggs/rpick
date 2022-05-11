@@ -1,6 +1,6 @@
 [package]
 name = "rpick"
-version = "0.8.9"
+version = "0.8.10"
 authors = ["Randy Barlow <randy@electronsweatshop.com>"]
 license = "GPL-3.0"
 readme = "README.md"
