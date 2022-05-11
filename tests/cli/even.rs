@@ -32,7 +32,7 @@ even:
 #[test]
 fn pick() {
     let (stdout, config_contents) =
-        super::test_rpick_with_config(CONFIG, &mut vec!["even"], "y\n", true);
+        super::test_rpick_with_config(CONFIG, &mut ["even"], "y\n", true);
 
     let expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(CONFIG).expect("Could not parse yaml");

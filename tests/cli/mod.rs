@@ -60,11 +60,11 @@ fn get_pick(stdout: &str) -> String {
 // further assertions.
 fn test_rpick_with_config(
     config: &str,
-    args: &mut Vec<&str>,
+    args: &mut [&str],
     stdin: &str,
     expected_success: bool,
 ) -> (String, String) {
-    let mut args = args.clone();
+    let mut args = args.to_owned();
     let mut config_f = NamedTempFile::new().expect("Failed to open temp file");
     write!(config_f, "{}", config).expect("Could not write config");
     config_f.as_file_mut().sync_all().unwrap();

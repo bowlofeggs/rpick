@@ -32,7 +32,7 @@ gaussian:
 // Assert correct behavior with an gaussian model config
 fn pick() {
     let (stdout, config_contents) =
-        super::test_rpick_with_config(CONFIG, &mut vec!["gaussian"], "y\n", true);
+        super::test_rpick_with_config(CONFIG, &mut ["gaussian"], "y\n", true);
 
     // Assert that the chosen item was a member of the config
     let expected_values: HashSet<&'static str> = ["option 1", "option 2", "option 3"]

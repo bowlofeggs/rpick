@@ -153,7 +153,7 @@ where
     }
 
     /// Run the inventory model for the given choices.
-    fn pick_inventory(&mut self, choices: &mut Vec<config::InventoryChoice>) -> String {
+    fn pick_inventory(&mut self, choices: &mut [config::InventoryChoice]) -> String {
         let initialize_candidates = || {
             choices
                 .iter()
@@ -189,7 +189,7 @@ where
     }
 
     /// Run the lottery model for the given choices.
-    fn pick_lottery(&mut self, choices: &mut Vec<config::LotteryChoice>) -> String {
+    fn pick_lottery(&mut self, choices: &mut [config::LotteryChoice]) -> String {
         let initialize_candidates = || {
             choices
                 .iter()

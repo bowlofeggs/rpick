@@ -32,7 +32,7 @@ fn category_not_found() {
 
     let (stdout, config_contents) = super::test_rpick_with_config(
         CATEGORY_NOT_FOUND_CONFIG,
-        &mut vec!["does_not_exist"],
+        &mut ["does_not_exist"],
         "",
         false,
     );

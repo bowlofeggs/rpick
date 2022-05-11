@@ -38,7 +38,7 @@ weighted:
 // Assert correct behavior with an weighted distribution model config
 fn pick() {
     let (stdout, config_contents) =
-        super::test_rpick_with_config(CONFIG, &mut vec!["weighted"], "y\n", true);
+        super::test_rpick_with_config(CONFIG, &mut ["weighted"], "y\n", true);
 
     let expected_config: BTreeMap<String, ConfigCategory> =
         serde_yaml::from_str(CONFIG).expect("Could not parse yaml");

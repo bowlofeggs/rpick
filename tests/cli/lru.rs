@@ -32,7 +32,7 @@ lru:
 // Assert correct behavior with an lru model config
 fn pick() {
     let (stdout, config_contents) =
-        super::test_rpick_with_config(CONFIG, &mut vec!["lru"], "y\n", true);
+        super::test_rpick_with_config(CONFIG, &mut ["lru"], "y\n", true);
 
     // Assert that the chosen item was a member of the config
     assert_eq!(super::get_pick(&stdout), "option 1");

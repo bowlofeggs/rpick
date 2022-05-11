@@ -38,7 +38,7 @@ inventory:
 // Assert correct behavior with an inventory model config
 fn pick() {
     let (stdout, config_contents) =
-        super::test_rpick_with_config(CONFIG, &mut vec!["inventory"], "y\n", true);
+        super::test_rpick_with_config(CONFIG, &mut ["inventory"], "y\n", true);
 
     // Assert that the chosen item was a member of the config. Note that "option 4" is not listed
     // here, though it is in the config, since it has 0 tickets and should never be chosen.
