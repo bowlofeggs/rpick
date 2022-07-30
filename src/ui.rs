@@ -1,4 +1,4 @@
-/* Copyright © 2021 Randy Barlow
+/* Copyright © 2021-2022 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -30,7 +30,7 @@ pub enum Cell<'a> {
     Unsigned(u64),
 }
 
-impl<'a> From<f64> for Cell<'_> {
+impl From<f64> for Cell<'_> {
     fn from(f: f64) -> Self {
         Self::Float(f)
     }
@@ -42,13 +42,13 @@ impl<'a> From<&'a str> for Cell<'a> {
     }
 }
 
-impl<'a> From<u64> for Cell<'_> {
+impl From<u64> for Cell<'_> {
     fn from(u: u64) -> Self {
         Self::Unsigned(u)
     }
 }
 
-impl<'a> From<&Cell<'_>> for String {
+impl From<&Cell<'_>> for String {
     fn from(c: &Cell) -> String {
         match c {
             Cell::Boolean(value) => value.to_string(),
