@@ -130,7 +130,7 @@ pub enum ConfigCategory {
 ///
 /// * `name` - The name of the choice.
 /// * `tickets` - The current number of tickets the choice has.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct InventoryChoice {
     pub name: String,
     #[serde(default = "default_weight")]
@@ -145,7 +145,7 @@ pub struct InventoryChoice {
 /// * `tickets` - The current number of tickets the choice has.
 /// * `weight` - The number of tickets that will be added to `tickets` each time this choice is not
 ///   picked.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LotteryChoice {
     pub name: String,
     #[serde(default = "default_weight")]
@@ -160,7 +160,7 @@ pub struct LotteryChoice {
 ///
 /// * `name` - The name of the choice
 /// * `weight` - How much chance this choice has of being chosen, relative to the other choices.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct WeightedChoice {
     pub name: String,
     #[serde(default = "default_weight")]
