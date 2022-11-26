@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 pub fn read_config(
     config_file_path: &str,
 ) -> Result<BTreeMap<String, ConfigCategory>, Box<dyn error::Error>> {
-    let f = File::open(&config_file_path)?;
+    let f = File::open(config_file_path)?;
     let reader = BufReader::new(f);
 
     let config: BTreeMap<String, ConfigCategory> = serde_yaml::from_reader(reader)?;
@@ -55,7 +55,7 @@ pub fn write_config(
         .write(true)
         .create(true)
         .truncate(true)
-        .open(&config_file_path)?;
+        .open(config_file_path)?;
     let yaml = serde_yaml::to_string(&config).unwrap();
 
     f.write_all(&yaml.into_bytes())?;
