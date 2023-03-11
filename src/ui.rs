@@ -1,4 +1,4 @@
-/* Copyright © 2021-2022 Randy Barlow
+/* Copyright © 2021-2023 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -13,9 +13,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! # The Ui Trait
 //!
 //! The Ui Trait defines an interface for bridging human interactions with the rpick crate.
-
-#[cfg(test)]
-use mockall::automock;
 
 /// An individual cell within rpick's chance tables.
 ///
@@ -83,7 +80,6 @@ pub struct Table<'a> {
 /// A struct implementing this trait must be passed to the rpick engine.
 ///
 /// This is how rpick interacts with users.
-#[cfg_attr(test, automock)]
 pub trait Ui {
     /// If this method returns `true`, [`Ui::display_table`] will be called by the engine.
     ///
@@ -93,7 +89,7 @@ pub trait Ui {
     fn call_display_table(&self) -> bool;
 
     /// Display the given table to the user.
-    fn display_table<'a>(&self, table: &Table<'a>);
+    fn display_table(&self, table: &Table);
 
     /// Display the given message to the user.
     fn info(&self, message: &str);
