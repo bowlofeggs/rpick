@@ -1,3 +1,8 @@
+# 0.8.13
+
+* Update dependencies.
+
+
 # 0.8.12
 
 * Update dependencies.
