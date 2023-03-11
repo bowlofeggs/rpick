@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020-2021 Randy Barlow
+ * Copyright © 2020, 2021, 2023 Randy Barlow
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 /// This module tests the CLI by running it as a subprocess and inspecting its outputs and
 /// resulting config file. This file includes tests from submodules, and also defines a few utility
 /// functions that they all use.
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Read, Seek, Write};
 
 use assert_cmd::Command;
 use regex::Regex;
@@ -73,9 +73,7 @@ fn test_rpick_with_config(
     let stdout = test_rpick(&args, stdin, expected_success);
 
     let mut config_contents = String::new();
-    config_f
-        .seek(SeekFrom::Start(0))
-        .expect("Could not seek file");
+    config_f.rewind().expect("Could not seek file");
     config_f
         .read_to_string(&mut config_contents)
         .expect("Could not read config");
