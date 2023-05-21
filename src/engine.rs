@@ -1,4 +1,4 @@
-/* Copyright © 2019-2021 Randy Barlow
+/* Copyright © 2019-2023 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -204,7 +204,7 @@ where
         for choice in choices.iter_mut() {
             choice.tickets += choice.weight;
         }
-        choices[index].tickets = 0;
+        choices[index].tickets = choices[index].reset;
         choices[index].name.clone()
     }
 
@@ -866,16 +866,19 @@ mod tests {
         let mut choices = vec![
             config::LotteryChoice {
                 name: "this".to_string(),
+                reset: 0,
                 tickets: 1,
                 weight: 1,
             },
             config::LotteryChoice {
                 name: "that".to_string(),
+                reset: 0,
                 tickets: 2,
                 weight: 4,
             },
             config::LotteryChoice {
                 name: "the other".to_string(),
+                reset: 0,
                 tickets: 3,
                 weight: 9,
             },
@@ -889,16 +892,19 @@ mod tests {
             vec![
                 config::LotteryChoice {
                     name: "this".to_string(),
+                    reset: 0,
                     tickets: 0,
                     weight: 1
                 },
                 config::LotteryChoice {
                     name: "that".to_string(),
+                    reset: 0,
                     tickets: 6,
                     weight: 4
                 },
                 config::LotteryChoice {
                     name: "the other".to_string(),
+                    reset: 0,
                     tickets: 12,
                     weight: 9
                 }
@@ -934,16 +940,19 @@ mod tests {
         let mut choices = vec![
             config::LotteryChoice {
                 name: "this".to_string(),
+                reset: 0,
                 tickets: 0,
                 weight: 1,
             },
             config::LotteryChoice {
                 name: "that".to_string(),
+                reset: 0,
                 tickets: 2,
                 weight: 4,
             },
             config::LotteryChoice {
                 name: "the other".to_string(),
+                reset: 0,
                 tickets: 3,
                 weight: 9,
             },
@@ -957,17 +966,79 @@ mod tests {
             vec![
                 config::LotteryChoice {
                     name: "this".to_string(),
+                    reset: 0,
                     tickets: 1,
                     weight: 1
                 },
                 config::LotteryChoice {
                     name: "that".to_string(),
+                    reset: 0,
                     tickets: 6,
                     weight: 4
                 },
                 config::LotteryChoice {
                     name: "the other".to_string(),
+                    reset: 0,
                     tickets: 0,
+                    weight: 9
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_pick_lottery_non_zero_reset() {
+        let mut ui = MockUi::default();
+        ui.expect_call_display_table().times(1).returning(|| false);
+        ui.expect_prompt_choice()
+            .with(predicate::eq("this"))
+            .times(1)
+            .returning(|_| true);
+        let mut engine = Engine::new(&ui);
+        engine.set_rng(FakeRng(0));
+        let mut choices = vec![
+            config::LotteryChoice {
+                name: "this".to_string(),
+                reset: 1,
+                tickets: 1,
+                weight: 1,
+            },
+            config::LotteryChoice {
+                name: "that".to_string(),
+                reset: 2,
+                tickets: 2,
+                weight: 4,
+            },
+            config::LotteryChoice {
+                name: "the other".to_string(),
+                reset: 3,
+                tickets: 3,
+                weight: 9,
+            },
+        ];
+
+        let result = engine.pick_lottery(&mut choices);
+
+        assert_eq!(result, "this");
+        assert_eq!(
+            choices,
+            vec![
+                config::LotteryChoice {
+                    name: "this".to_string(),
+                    reset: 1,
+                    tickets: 1,
+                    weight: 1
+                },
+                config::LotteryChoice {
+                    name: "that".to_string(),
+                    reset: 2,
+                    tickets: 6,
+                    weight: 4
+                },
+                config::LotteryChoice {
+                    name: "the other".to_string(),
+                    reset: 3,
+                    tickets: 12,
                     weight: 9
                 }
             ]

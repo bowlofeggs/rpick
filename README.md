@@ -239,17 +239,19 @@ tea:
 
 ## Lottery
 
-The ```lottery``` distribution model is also a dynamic version of the ```weighted``` model. Each of
-the choices has a certain number of lottery tickets that influence how likely they are to be picked
-that round. Once an item is picked, it loses all of its lottery tickets and every choice that wasn't
-picked gains more lottery tickets. It accepts two keys:
+The `lottery` distribution model is also a dynamic version of the `weighted`
+model. Each of the choices has a certain number of lottery tickets that
+influence how likely they are to be picked that round. Once an item is picked,
+it gets its lottery tickets reset to `reset` tickets and every choice that
+wasn't picked gains more lottery tickets. It accepts two keys:
 
-* ```model```: This must be set to the string "lottery", in order to select this model.
-* ```choices```: This must be a list of objects. Each object accepts three keys:
-  - ```name```: This is required, and is the name of the choice.
-  - ```tickets```: The current number of lottery tickets that this choice has. This is optional, an
+* `model`: This must be set to the string "lottery", in order to select this model.
+* `choices`: This must be a list of objects. Each object accepts four keys:
+  - `name`: This is required, and is the name of the choice.
+  - `reset`: How many tickets the choice is reset to when picked. Defaults to 0.
+  - `tickets`: The current number of lottery tickets that this choice has. This is optional, an
     integer, and defaults to 1.
-  - ```weight```: This is an integer expressing how many lottery tickets are given to this choice
+  - `weight`: This is an integer expressing how many lottery tickets are given to this choice
     when it is not chosen. You can use this to influence how often this item gets favored relative
     to the other choices. It is optional, and defaults to 1.
 

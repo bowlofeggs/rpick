@@ -24,12 +24,15 @@ lottery:
   model: lottery
   choices:
     - name: option 1
+      reset: 0
       weight: 1
       tickets: 1
     - name: option 2
+      reset: 1
       weight: 2
       tickets: 1
     - name: option 3
+      reset: 2
       weight: 3
       tickets: 1
     - name: option 4
@@ -59,7 +62,7 @@ fn pick() {
     if let ConfigCategory::Lottery { choices } = &mut expected_config.get_mut("lottery").unwrap() {
         for choice in choices.iter_mut() {
             if choice.name == pick {
-                choice.tickets = 0;
+                choice.tickets = choice.reset;
             } else {
                 choice.tickets += choice.weight;
             }

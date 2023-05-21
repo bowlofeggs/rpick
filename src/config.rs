@@ -1,4 +1,4 @@
-/* Copyright © 2019-2021 Randy Barlow
+/* Copyright © 2019-2023 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -141,15 +141,20 @@ pub struct InventoryChoice {
 ///
 /// # Attributes
 ///
-/// * `name` - The name of the choice.
-/// * `tickets` - The current number of tickets the choice has.
-/// * `weight` - The number of tickets that will be added to `tickets` each time this choice is not
-///   picked.
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LotteryChoice {
+    /// The name of the choice
     pub name: String,
+
+    /// How many tickets the choice should be reset to when it is chosen.
+    #[serde(default = "default_reset")]
+    pub reset: u64,
+
+    /// The current number of tickets the choice has.
     #[serde(default = "default_weight")]
     pub tickets: u64,
+
+    /// The number of tickets that will be added to `tickets` each time this choice is not picked.
     #[serde(default = "default_weight")]
     pub weight: u64,
 }
@@ -172,6 +177,11 @@ fn default_stddev_scaling_factor() -> f64 {
     3.0
 }
 
+/// Reset to 0 by default.
+fn default_reset() -> u64 {
+    0
+}
+
 /// Define the default for the weight setting as 1.
 fn default_weight() -> u64 {
     1
@@ -185,5 +195,6 @@ mod tests {
     fn test_defaults() {
         assert!((default_stddev_scaling_factor() - 3.0).abs() < 0.000_001);
         assert_eq!(default_weight(), 1);
+        assert_eq!(default_reset(), 0);
     }
 }
