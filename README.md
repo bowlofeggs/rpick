@@ -13,7 +13,15 @@ visited getting a boost in their chances.
 
 # Install
 
-You can install ```rpick``` in Fedora:
+You can install `rpick` with an Arch AUR package:
+
+```
+$ git clone https://aur.archlinux.org/rpick.git
+$ cd rpick
+$ makepkg -sirc
+```
+
+Or in Fedora:
 
 ```
 $ sudo dnf install rpick
