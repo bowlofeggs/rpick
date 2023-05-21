@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:36
+FROM registry.fedoraproject.org/fedora:38
 LABEL maintainer="Randy Barlow <randy@electronsweatshop.com>"
 
 RUN dnf upgrade -y
