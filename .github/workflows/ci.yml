@@ -11,7 +11,85 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  ci:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
+      - uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_flags: ["", "--release"]
+        rust_version: ["1.65", "stable"]
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
+      - name: Cache compilation assets
+        uses: actions/cache@v2
+        env:
+          cache-name: build-${{ matrix.rust_version }}-${{ matrix.build_flags }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: ${{ matrix.build_flags }}
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
+      - name: Cache compilation assets
+        uses: actions/cache@v2
+        env:
+          cache-name: clippy
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-targets --all-features -- -D warnings
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
+      - name: Cache compilation assets
+        uses: actions/cache@v2
+        env:
+          cache-name: doc
+        with:
+          path: |
+            target
+            /usr/share/rust/.cargo
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+      - name: Run cargo doc
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --document-private-items --no-deps
+  fmt:
     runs-on: ubuntu-latest
     steps:
       - name: Check out branch
@@ -21,47 +99,32 @@ jobs:
         with:
           command: fmt
           args: -- --check -l -v
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_flags: ["", "--release"]
+        rust_version: ["1.65", "stable"]
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
       - name: Cache compilation assets
         uses: actions/cache@v2
         env:
-          cache-name: rust
+          cache-name: test-${{ matrix.rust_version }}-${{ matrix.build_flags }}
         with:
           path: |
             target
-            /usr/share/rust/.cargo
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
-      - name: Install cargo audit
-        uses: actions-rs/cargo@v1
+      - uses: actions-rs/toolchain@v1
         with:
-          command: install
-          args: cargo-audit
-      - name: Run audit check
-        uses: actions-rs/cargo@v1
-        with:
-          command: audit
-      # Test with the release flag before we have a debug build. This ensures that
-      # https://github.com/bowlofeggs/rpick/issues/20 doesn't happen again.
-      - name: Run cargo test --release
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --release
-      - name: Run cargo build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-      - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets --all-features -- -D warnings
+          profile: minimal
+          toolchain: ${{ matrix.rust_version }}
+          override: true
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
-      - name: Run cargo doc
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
+          args: ${{ matrix.build_flags }}
