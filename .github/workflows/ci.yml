@@ -20,10 +20,15 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   build:
+    name: build (rust-${{ matrix.rust_version }}, ${{ matrix.build_type.name }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build_flags: ["", "--release"]
+        build_type:
+          - name: debug
+            flags: ""
+          - name: release
+            flags: "--release"
         rust_version: ["1.65", "stable"]
     steps:
       - name: Check out branch
@@ -31,7 +36,7 @@ jobs:
       - name: Cache compilation assets
         uses: actions/cache@v2
         env:
-          cache-name: build-${{ matrix.rust_version }}-${{ matrix.build_flags }}
+          cache-name: build-${{ matrix.rust_version }}-${{ matrix.build_type.name }}
         with:
           path: |
             target
@@ -48,7 +53,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: ${{ matrix.build_flags }} --locked
+          args: ${{ matrix.build_type.flags }} --locked
   clippy:
     runs-on: ubuntu-latest
     steps:
@@ -102,10 +107,15 @@ jobs:
           command: fmt
           args: -- --check -l -v
   test:
+    name: test (rust-${{ matrix.rust_version }}, ${{ matrix.build_type.name }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build_flags: ["", "--release"]
+        build_type:
+          - name: debug
+            flags: ""
+          - name: release
+            flags: "--release"
         rust_version: ["1.65", "stable"]
     steps:
       - name: Check out branch
@@ -113,7 +123,7 @@ jobs:
       - name: Cache compilation assets
         uses: actions/cache@v2
         env:
-          cache-name: test-${{ matrix.rust_version }}-${{ matrix.build_flags }}
+          cache-name: test-${{ matrix.rust_version }}-${{ matrix.build_type.name }}
         with:
           path: |
             target
@@ -130,4 +140,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: ${{ matrix.build_flags }} --locked
+          args: ${{ matrix.build_type.flags }} --locked
