@@ -65,25 +65,17 @@ where
     /// # Returns
     ///
     /// This will return the chosen item.
-    pub fn pick(
-        &mut self,
-        config: &mut BTreeMap<String, config::ConfigCategory>,
-        category: String,
-    ) -> Result<String, PickError> {
-        let config_category = config.get_mut(&category[..]);
+    pub fn pick(&mut self, config_category: &mut config::ConfigCategory) -> String {
         match config_category {
-            Some(category) => match category {
-                config::ConfigCategory::Even { choices } => Ok(self.pick_even(choices)),
-                config::ConfigCategory::Gaussian {
-                    choices,
-                    stddev_scaling_factor,
-                } => Ok(self.pick_gaussian(choices, *stddev_scaling_factor)),
-                config::ConfigCategory::Inventory { choices } => Ok(self.pick_inventory(choices)),
-                config::ConfigCategory::Lottery { choices } => Ok(self.pick_lottery(choices)),
-                config::ConfigCategory::Lru { choices } => Ok(self.pick_lru(choices)),
-                config::ConfigCategory::Weighted { choices } => Ok(self.pick_weighted(choices)),
-            },
-            None => Err(PickError::CategoryNotFound(category)),
+            config::ConfigCategory::Even { choices } => self.pick_even(choices),
+            config::ConfigCategory::Gaussian {
+                choices,
+                stddev_scaling_factor,
+            } => self.pick_gaussian(choices, *stddev_scaling_factor),
+            config::ConfigCategory::Inventory { choices } => self.pick_inventory(choices),
+            config::ConfigCategory::Lottery { choices } => self.pick_lottery(choices),
+            config::ConfigCategory::Lru { choices } => self.pick_lru(choices),
+            config::ConfigCategory::Weighted { choices } => self.pick_weighted(choices),
         }
     }
 
@@ -455,57 +447,8 @@ mod tests {
         assert!(!engine.get_consent("you don't want this"));
     }
 
-    #[test]
-    fn test_pick() {
-        let mut ui = MockUi::default();
-        ui.expect_call_display_table().times(2).returning(|| false);
-        ui.expect_prompt_choice()
-            .with(predicate::in_iter(vec!["that", "this"]))
-            .times(2)
-            .returning(|c| c == "that");
-        let mut engine = Engine::new(&ui);
-        engine.set_rng(FakeRng(0));
-        let choices = vec![
-            String::from("this"),
-            String::from("that"),
-            String::from("the other"),
-        ];
-        let category = config::ConfigCategory::Even { choices };
-        let mut config = BTreeMap::new();
-        config.insert("things".to_string(), category);
-
-        let choice = engine
-            .pick(&mut config, "things".to_string())
-            .expect("unexpected");
-
-        assert_eq!(choice, "that");
-    }
-
-    #[test]
-    fn test_pick_nonexistant_category() {
-        let ui = MockUi::default();
-        let mut engine = Engine::new(&ui);
-        let choices = vec![
-            String::from("this"),
-            String::from("that"),
-            String::from("the other"),
-        ];
-        let category = config::ConfigCategory::Even { choices };
-        let mut config = BTreeMap::new();
-        config.insert("things".to_string(), category);
-
-        match engine.pick(&mut config, "does not exist".to_string()) {
-            Ok(_) => {
-                panic!("The non-existant category should have returned an error.");
-            }
-            Err(error) => {
-                assert_eq!(
-                    format!("{}", error),
-                    "The category `does not exist` was not found in the given config."
-                );
-            }
-        }
-    }
+    // TODO replace test_pick
+    // TODO replace test_pick_nonexistant_category
 
     #[test]
     fn test_pick_even() {

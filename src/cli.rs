@@ -91,6 +91,7 @@ impl ui::Ui for Cli {
     fn prompt_choice(&self, choice: &str) -> bool {
         print!("Choice is {}. Accept? (Y/n) ", choice);
         io::stdout().flush().unwrap();
+        // TODO fix panic caused by feeding choices by stdin.
         let line = io::stdin().lock().lines().next().unwrap().unwrap();
         if ["", "y", "Y"].contains(&line.as_str()) {
             return true;

@@ -14,7 +14,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //!
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
 
+use std::collections::BTreeMap;
+use std::io;
+
 use clap::Parser;
+
+use rpick::config;
+use rpick::engine::PickError;
 
 mod cli;
 
@@ -32,34 +38,57 @@ struct CliArgs {
     verbose: bool,
 }
 
+/// Get the `ConfigCategory` to feed to the engine.
+fn get_config_category<'a>(
+    config: &'a mut BTreeMap<String, config::ConfigCategory>,
+    category: &str,
+    ad_hoc_category: &'a mut Option<config::ConfigCategory>,
+) -> Result<&'a mut config::ConfigCategory, PickError> {
+    if category == "-" {
+        let choices = io::stdin()
+            .lines()
+            .collect::<Result<Vec<String>, io::Error>>()
+            .unwrap();
+        let config_category = config::ConfigCategory::Even { choices };
+        *ad_hoc_category = Some(config_category);
+        Ok(ad_hoc_category.as_mut().unwrap())
+    } else {
+        config
+            .get_mut(category)
+            .ok_or_else(|| PickError::CategoryNotFound(category.to_owned()))
+    }
+}
+
 fn main() {
     let args = CliArgs::parse();
     let config_path = get_config_file_path(&args);
-    let config = rpick::config::read_config(&config_path);
-    match config {
-        Ok(config) => {
-            let mut config = config;
-            let ui = cli::Cli::new(args.verbose);
-
-            let mut engine = rpick::engine::Engine::new(&ui);
-            match engine.pick(&mut config, args.category) {
-                Ok(_) => match rpick::config::write_config(&config_path, config) {
-                    Ok(_) => {}
-                    Err(error) => {
-                        println!("{}", error);
-                        std::process::exit(1);
-                    }
-                },
-                Err(error) => {
-                    println!("{}", error);
-                    std::process::exit(1);
-                }
-            }
-        }
+    let config = match rpick::config::read_config(&config_path) {
+        Ok(config) => config,
         Err(error) => {
             println!("Error reading config file at {}: {}", config_path, error);
             std::process::exit(1);
         }
+    };
+    let mut config = config;
+    let ui = cli::Cli::new(args.verbose);
+
+    let mut engine = rpick::engine::Engine::new(&ui);
+    let mut possible_dynamic_category = None;
+    let config_category = match get_config_category(
+        &mut config,
+        &args.category[..],
+        &mut possible_dynamic_category,
+    ) {
+        Ok(config_category) => config_category,
+        Err(error) => {
+            println!("{}", error);
+            std::process::exit(1);
+        }
+    };
+    engine.pick(config_category);
+    if let Err(e) = rpick::config::write_config(&config_path, config) {
+        println!("{}", e);
+        std::process::exit(1);
     }
 }
 

@@ -47,10 +47,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! let choices = vec![String::from("this"), String::from("that"),
 //!                    String::from("the other")];
 //! let category = rpick::config::ConfigCategory::Even{choices: choices};
-//! let mut config = BTreeMap::new();
-//! config.insert("things".to_string(), category);
 //!
-//! let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+//! let choice = engine.pick(category);
 //!
 //! // 32-bit architectures have different PRNG results than 64-bit architectures, so we will
 //! // only run this assertion on 64-bit systems.
