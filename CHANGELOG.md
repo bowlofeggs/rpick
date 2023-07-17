@@ -1,3 +1,10 @@
+# 0.9.0
+
+* The minimum supported Rust version is now 1.66.
+* The lottery model now allows custom reset values for its items
+  [#276](https://github.com/bowlofeggs/rpick/pull/276).
+* Update dependencies.
+
 # 0.8.13
 
 * Update dependencies.

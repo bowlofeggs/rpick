@@ -732,7 +732,7 @@ checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 
 [[package]]
 name = "rpick"
-version = "0.8.13"
+version = "0.9.0"
 dependencies = [
  "approx",
  "assert_cmd",
