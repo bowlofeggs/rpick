@@ -1,3 +1,12 @@
+# 0.9.1
+
+* [RUSTSEC-2023-0075](https://rustsec.org/advisories/RUSTSEC-2023-0075.html): Update
+  `unsafe-libyaml` to `0.2.10` ([#353](https://github.com/bowlofeggs/rpick/pull/353)).
+* [GHSA-c827-hfw6-qwvm](https://github.com/advisories/GHSA-c827-hfw6-qwvm): Update
+  `rustix` to `0.38.30` ([#359](https://github.com/bowlofeggs/rpick/pull/359)).
+* The minimum supported Rust version is now 1.70.0.
+* Update dependencies.
+
 # 0.9.0
 
 * The minimum supported Rust version is now 1.66.
