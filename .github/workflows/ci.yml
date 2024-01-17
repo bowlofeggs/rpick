@@ -20,7 +20,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   build:
-    name: build (rust-${{ matrix.rust_version }}, ${{ matrix.build_type.name }})
+    name: build (rust-${{ matrix.rust_version.name }}, ${{ matrix.build_type.name }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,14 +29,18 @@ jobs:
             flags: ""
           - name: release
             flags: "--release"
-        rust_version: ["1.66", "stable"]
+        rust_version:
+          - name: msrv
+            version: "1.70"
+          - name: stable
+            version: stable
     steps:
       - name: Check out branch
         uses: actions/checkout@v2
       - name: Cache compilation assets
         uses: actions/cache@v2
         env:
-          cache-name: build-${{ matrix.rust_version }}-${{ matrix.build_type.name }}
+          cache-name: build-${{ matrix.rust_version.version }}-${{ matrix.build_type.name }}
         with:
           path: |
             target
@@ -47,7 +51,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust_version }}
+          toolchain: ${{ matrix.rust_version.version }}
           override: true
       - name: Run cargo build
         uses: actions-rs/cargo@v1
@@ -107,7 +111,7 @@ jobs:
           command: fmt
           args: -- --check -l -v
   test:
-    name: test (rust-${{ matrix.rust_version }}, ${{ matrix.build_type.name }})
+    name: test (rust-${{ matrix.rust_version.name }}, ${{ matrix.build_type.name }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -116,14 +120,18 @@ jobs:
             flags: ""
           - name: release
             flags: "--release"
-        rust_version: ["1.66", "stable"]
+        rust_version:
+          - name: msrv
+            version: "1.70"
+          - name: stable
+            version: stable
     steps:
       - name: Check out branch
         uses: actions/checkout@v2
       - name: Cache compilation assets
         uses: actions/cache@v2
         env:
-          cache-name: test-${{ matrix.rust_version }}-${{ matrix.build_type.name }}
+          cache-name: test-${{ matrix.rust_version.version }}-${{ matrix.build_type.name }}
         with:
           path: |
             target
@@ -134,7 +142,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust_version }}
+          toolchain: ${{ matrix.rust_version.version }}
           override: true
       - name: Run cargo test
         uses: actions-rs/cargo@v1
