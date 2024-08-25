@@ -2,7 +2,7 @@
 name = "rpick"
 version = "0.9.1"
 authors = ["Randy Barlow <randy@electronsweatshop.com>"]
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 readme = "README.md"
 repository = "https://github.com/bowlofeggs/rpick"
 documentation = "https://docs.rs/rpick"
