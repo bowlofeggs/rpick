@@ -31,7 +31,7 @@ jobs:
             flags: "--release"
         rust_version:
           - name: msrv
-            version: "1.70"
+            version: "1.74"
           - name: stable
             version: stable
     steps:
@@ -122,7 +122,7 @@ jobs:
             flags: "--release"
         rust_version:
           - name: msrv
-            version: "1.70"
+            version: "1.74"
           - name: stable
             version: stable
     steps:

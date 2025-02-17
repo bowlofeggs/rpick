@@ -12,7 +12,7 @@ description = """\
 keywords = ["random", "game"]
 categories = ["command-line-utilities", "games"]
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.74"
 
 [dependencies]
 clap = { version = "4.4", features = ["derive", "env"] }

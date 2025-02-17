@@ -1,3 +1,7 @@
+# Next
+
+* The minimum supported Rust version is now 1.74.0.
+
 # 0.9.1
 
 * [RUSTSEC-2023-0075](https://rustsec.org/advisories/RUSTSEC-2023-0075.html): Update
