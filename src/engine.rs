@@ -45,7 +45,7 @@ where
     ///
     /// * `ui` - This is a struct that implements the [`ui::Ui`] trait. It is how rpick will
     ///     interact with the caller.
-    pub fn new(ui: &'ui U) -> Engine<U> {
+    pub fn new(ui: &'ui U) -> Engine<'ui, U> {
         let rng = rand::thread_rng();
 
         Engine {
