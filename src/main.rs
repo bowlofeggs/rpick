@@ -25,11 +25,13 @@ const CONFIG_FILE: &str = "rpick.yml";
 struct CliArgs {
     /// The category you wish to pick from.
     category: String,
-    #[clap(short, long, env = "RPICK_CONFIG")]
+
     /// A path to the config file you wish to use.
+    #[arg(short, long, env = "RPICK_CONFIG")]
     config: Option<String>,
-    #[clap(short, long)]
+
     /// Print more information about the pick.
+    #[arg(short, long)]
     verbose: bool,
 }
 
