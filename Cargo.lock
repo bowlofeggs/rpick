@@ -680,19 +680,11 @@ dependencies = [
  "rand",
  "rand_distr",
  "regex",
- "rpick-clap",
  "serde",
  "serde_yaml",
  "statrs",
  "tempfile",
  "thiserror",
-]
-
-[[package]]
-name = "rpick-clap"
-version = "0.0.0"
-dependencies = [
- "clap",
 ]
 
 [[package]]

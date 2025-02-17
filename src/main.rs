@@ -16,12 +16,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
 mod cli;
 
-use std::{borrow::Cow, path::Path};
+use std::{
+    borrow::Cow,
+    path::{Path, PathBuf},
+};
 
 use clap::Parser;
 
 use cli::Cli;
-use rpick_clap::CliArgs;
+
+include!("command.include");
 
 const CONFIG_FILE: &str = "rpick.yml";
 
