@@ -21,7 +21,7 @@ mod cli;
 const CONFIG_FILE: &str = "rpick.yml";
 
 #[derive(Parser)]
-#[command(version)]
+#[command(about, version)]
 struct CliArgs {
     /// The category you wish to pick from.
     category: String,

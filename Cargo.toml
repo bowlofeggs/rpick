@@ -7,8 +7,9 @@ readme = "README.md"
 repository = "https://github.com/bowlofeggs/rpick"
 documentation = "https://docs.rs/rpick"
 description = """\
-              Helps you pick items from a list by various algorithms. Example uses: pick a
-              restaurant you haven't been to in a while, or an album to listen to."""
+              Helps you pick items from a list by various algorithms.\n\n\
+              Example uses: pick a restaurant you haven't been to in\n\
+              a while, or an album to listen to."""
 keywords = ["random", "game"]
 categories = ["command-line-utilities", "games"]
 edition = "2021"
