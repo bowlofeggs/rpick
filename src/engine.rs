@@ -422,9 +422,6 @@ mod tests {
         }
     }
 
-    #[derive(Default)]
-    struct Ui;
-
     mock! {
         pub Ui {}
 
