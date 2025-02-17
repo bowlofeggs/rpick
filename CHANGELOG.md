@@ -1,6 +1,7 @@
 # Next
 
 * The minimum supported Rust version is now 1.74.0.
+* The CLI now has a `--version` flag.
 
 # 0.9.1
 
