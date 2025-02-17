@@ -1,4 +1,4 @@
-/* Copyright © 2019-2021 Randy Barlow
+/* Copyright © 2019-2021, 2025 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -50,7 +50,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! let mut config = BTreeMap::new();
 //! config.insert("things".to_string(), category);
 //!
-//! let choice = engine.pick(&mut config, "things".to_string()).expect("unexpected");
+//! let choice = engine.pick(&mut config, "things").unwrap();
 //!
 //! // 32-bit architectures have different PRNG results than 64-bit architectures, so we will
 //! // only run this assertion on 64-bit systems.

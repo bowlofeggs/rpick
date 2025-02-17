@@ -14,6 +14,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //!
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
 
+use std::{
+    borrow::Cow,
+    path::{Path, PathBuf},
+};
+
 use clap::Parser;
 
 mod cli;
@@ -28,7 +33,7 @@ struct CliArgs {
 
     /// A path to the config file you wish to use.
     #[arg(short, long, env = "RPICK_CONFIG")]
-    config: Option<String>,
+    config: Option<PathBuf>,
 
     /// Print more information about the pick.
     #[arg(short, long)]
@@ -45,7 +50,7 @@ fn main() {
             let ui = cli::Cli::new(args.verbose);
 
             let mut engine = rpick::engine::Engine::new(&ui);
-            match engine.pick(&mut config, args.category) {
+            match engine.pick(&mut config, args.category.as_ref()) {
                 Ok(_) => match rpick::config::write_config(&config_path, config) {
                     Ok(_) => {}
                     Err(error) => {
@@ -60,7 +65,11 @@ fn main() {
             }
         }
         Err(error) => {
-            println!("Error reading config file at {}: {}", config_path, error);
+            println!(
+                "Error reading config file at {}: {}",
+                config_path.display(),
+                error
+            );
             std::process::exit(1);
         }
     }
@@ -70,13 +79,13 @@ fn main() {
 ///
 /// If the config flag is set in the given CLI args, that path is used. Otherwise, the default
 /// config name (CONFIG_FILE) is appended to the user's home config directory to form the path.
-fn get_config_file_path(args: &CliArgs) -> String {
+fn get_config_file_path(args: &CliArgs) -> Cow<'_, Path> {
     match &args.config {
-        Some(config) => config.clone(),
+        Some(config) => config.into(),
         None => {
             let config_dir = dirs_next::config_dir().expect("Unable to find config dir.");
-            let config_file = config_dir.join(CONFIG_FILE);
-            String::from(config_file.to_str().expect("Unable to determine config."))
+
+            config_dir.join(CONFIG_FILE).into()
         }
     }
 }

@@ -1,4 +1,4 @@
-/* Copyright © 2019-2023 Randy Barlow
+/* Copyright © 2019-2023, 2025 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -65,12 +65,12 @@ where
     /// # Returns
     ///
     /// This will return the chosen item.
-    pub fn pick(
+    pub fn pick<'c>(
         &mut self,
         config: &mut BTreeMap<String, config::ConfigCategory>,
-        category: String,
-    ) -> Result<String, PickError> {
-        let config_category = config.get_mut(&category[..]);
+        category: &'c str,
+    ) -> Result<String, PickError<'c>> {
+        let config_category = config.get_mut(category);
         match config_category {
             Some(category) => match category {
                 config::ConfigCategory::Even { choices } => Ok(self.pick_even(choices)),
@@ -372,9 +372,9 @@ where
 
 /// Define the errors that can be returned from [`Engine::pick`].
 #[derive(Debug, Error)]
-pub enum PickError {
+pub enum PickError<'e> {
     #[error("The category `{0}` was not found in the given config.")]
-    CategoryNotFound(String),
+    CategoryNotFound(&'e str),
 }
 
 #[cfg(test)]
@@ -471,9 +471,7 @@ mod tests {
         let mut config = BTreeMap::new();
         config.insert("things".to_string(), category);
 
-        let choice = engine
-            .pick(&mut config, "things".to_string())
-            .expect("unexpected");
+        let choice = engine.pick(&mut config, "things").unwrap();
 
         assert_eq!(choice, "that");
     }
@@ -491,7 +489,7 @@ mod tests {
         let mut config = BTreeMap::new();
         config.insert("things".to_string(), category);
 
-        match engine.pick(&mut config, "does not exist".to_string()) {
+        match engine.pick(&mut config, "does not exist") {
             Ok(_) => {
                 panic!("The non-existant category should have returned an error.");
             }

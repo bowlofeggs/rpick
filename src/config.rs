@@ -1,4 +1,4 @@
-/* Copyright © 2019-2023 Randy Barlow
+/* Copyright © 2019-2023, 2025 Randy Barlow
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -15,10 +15,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! This module defines the rpick configuration.
 //!
 //! The configuration defines the pick categories, their algorithms, and their choices.
-use std::collections::BTreeMap;
-use std::error;
-use std::fs::{File, OpenOptions};
-use std::io::{BufReader, Write};
+use std::{
+    collections::BTreeMap,
+    error,
+    fs::{File, OpenOptions},
+    io::{BufReader, Write},
+    path::Path,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -32,7 +35,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Returns a mapping of YAML to [`ConfigCategory`]'s, or an Error.
 pub fn read_config(
-    config_file_path: &str,
+    config_file_path: &Path,
 ) -> Result<BTreeMap<String, ConfigCategory>, Box<dyn error::Error>> {
     let f = File::open(config_file_path)?;
     let reader = BufReader::new(f);
@@ -48,7 +51,7 @@ pub fn read_config(
 /// * `config_file_path` - A filesystem path that the config should be written to.
 /// * `config` - The config that should be serialized as YAML.
 pub fn write_config(
-    config_file_path: &str,
+    config_file_path: &Path,
     config: BTreeMap<String, ConfigCategory>,
 ) -> Result<(), Box<dyn error::Error>> {
     let mut f = OpenOptions::new()
