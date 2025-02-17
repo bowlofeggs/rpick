@@ -67,9 +67,9 @@ where
     /// This will return the chosen item.
     pub fn pick<'c>(
         &mut self,
-        config: &mut BTreeMap<String, config::ConfigCategory>,
+        config: &'c mut BTreeMap<String, config::ConfigCategory>,
         category: &'c str,
-    ) -> Result<String, PickError<'c>> {
+    ) -> Result<&'c str, PickError<'c>> {
         let config_category = config.get_mut(category);
         match config_category {
             Some(category) => match category {
@@ -104,7 +104,7 @@ where
     }
 
     /// Use an even distribution random model to pick from the given choices.
-    fn pick_even(&mut self, choices: &[String]) -> String {
+    fn pick_even<'c>(&mut self, choices: &'c [String]) -> &'c str {
         let initialize_candidates = || {
             choices
                 .iter()
@@ -115,12 +115,16 @@ where
 
         let index = self.pick_weighted_common(&initialize_candidates);
 
-        choices[index].clone()
+        &choices[index]
     }
 
     /// Run the gaussian model for the given choices and standard deviation scaling factor. When the
     /// user accepts a choice, move that choice to end of the choices Vector and return.
-    fn pick_gaussian(&mut self, choices: &mut Vec<String>, stddev_scaling_factor: f64) -> String {
+    fn pick_gaussian<'c>(
+        &mut self,
+        choices: &'c mut Vec<String>,
+        stddev_scaling_factor: f64,
+    ) -> &'c str {
         let mut candidates = choices.clone();
         let mut index;
 
@@ -148,12 +152,13 @@ where
         }
 
         let value = choices.remove(index);
-        choices.push(value.clone());
-        value
+        choices.push(value);
+
+        &choices[choices.len() - 1]
     }
 
     /// Run the inventory model for the given choices.
-    fn pick_inventory(&mut self, choices: &mut [config::InventoryChoice]) -> String {
+    fn pick_inventory<'c>(&mut self, choices: &'c mut [config::InventoryChoice]) -> &'c str {
         let initialize_candidates = || {
             choices
                 .iter()
@@ -166,12 +171,13 @@ where
         let index = self.pick_weighted_common(&initialize_candidates);
 
         choices[index].tickets -= 1;
-        choices[index].name.clone()
+
+        &choices[index].name
     }
 
     /// Run the Lru model for the given choices. When the user accepts a choice, move that choice to
     /// the end of the choices Vector and return.
-    fn pick_lru(&mut self, choices: &mut Vec<String>) -> String {
+    fn pick_lru<'c>(&mut self, choices: &'c mut Vec<String>) -> &'c str {
         for (index, choice) in choices.iter().enumerate() {
             if self.ui.call_display_table() {
                 self.display_lru_table(index, choices);
@@ -179,17 +185,21 @@ where
 
             if self.get_consent(&choice[..]) {
                 let chosen = choices.remove(index);
-                choices.push(chosen.clone());
-                return chosen;
+                choices.push(chosen);
+
+                // We can be sure there is a last since we just pushed it.
+                return choices.last().unwrap();
             }
         }
+
         self.express_disapproval();
+
         // If we've gotten here, the user hasn't made a choice. So… let's do it again!
         self.pick_lru(choices)
     }
 
     /// Run the lottery model for the given choices.
-    fn pick_lottery(&mut self, choices: &mut [config::LotteryChoice]) -> String {
+    fn pick_lottery<'c>(&mut self, choices: &'c mut [config::LotteryChoice]) -> &'c str {
         let initialize_candidates = || {
             choices
                 .iter()
@@ -205,11 +215,12 @@ where
             choice.tickets += choice.weight;
         }
         choices[index].tickets = choices[index].reset;
-        choices[index].name.clone()
+
+        &choices[index].name
     }
 
     /// Run the weighted model for the given choices.
-    fn pick_weighted(&mut self, choices: &[config::WeightedChoice]) -> String {
+    fn pick_weighted<'c>(&mut self, choices: &'c [config::WeightedChoice]) -> &'c str {
         let initialize_candidates = || {
             choices
                 .iter()
@@ -220,7 +231,7 @@ where
 
         let index = self.pick_weighted_common(&initialize_candidates);
 
-        choices[index].name.clone()
+        &choices[index].name
     }
 
     /// A common weighted choice algorithm used as the core of many models.
