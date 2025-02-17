@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/// The tests in this module assert correct error handling.
+//! The tests in this module assert correct error handling.
 
 const CATEGORY_NOT_FOUND_CONFIG: &str = "
 ---
