@@ -1,0 +1,14 @@
+[package]
+name = "rpick-clap"
+version = "0.0.0"
+authors = ["Randy Barlow <randy@electronsweatshop.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+repository = "https://github.com/bowlofeggs/rpick"
+documentation = "https://docs.rs/rpick-clap"
+description = """Defines rpick's clap Command."""
+edition = "2021"
+rust-version = "1.74"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive", "env"] }

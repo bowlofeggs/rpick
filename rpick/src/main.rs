@@ -14,31 +14,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //!
 //! ```rpick``` helps pick items from a list of choices, using various algorithms.
 
-use std::{
-    borrow::Cow,
-    path::{Path, PathBuf},
-};
+mod cli;
+
+use std::{borrow::Cow, path::Path};
 
 use clap::Parser;
 
-mod cli;
+use cli::Cli;
+use rpick_clap::CliArgs;
 
 const CONFIG_FILE: &str = "rpick.yml";
-
-#[derive(Parser)]
-#[command(about, version)]
-struct CliArgs {
-    /// The category you wish to pick from.
-    category: String,
-
-    /// A path to the config file you wish to use.
-    #[arg(short, long, env = "RPICK_CONFIG")]
-    config: Option<PathBuf>,
-
-    /// Print more information about the pick.
-    #[arg(short, long)]
-    verbose: bool,
-}
 
 fn main() {
     let args = CliArgs::parse();
@@ -47,7 +32,7 @@ fn main() {
     match config {
         Ok(config) => {
             let mut config = config;
-            let ui = cli::Cli::new(args.verbose);
+            let ui = Cli::new(args.verbose);
 
             let mut engine = rpick::engine::Engine::new(&ui);
             match engine.pick(&mut config, args.category.as_ref()) {

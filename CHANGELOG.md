@@ -3,6 +3,8 @@
 * The minimum supported Rust version is now 1.74.0.
 * The CLI now has a `--version` flag.
 * The `--help` command now displays about text.
+* rpick now has a man page. It appears in the build target folder, named
+  `rpick.1`.
 
 # 0.9.1
 
