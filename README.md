@@ -1,5 +1,5 @@
-![Audit](https://github.com/bowlofeggs/rpick/workflows/Audit/badge.svg?branch=master)
-![CI](https://github.com/bowlofeggs/rpick/workflows/CI/badge.svg?branch=master)
+![Audit](https://github.com/bowlofeggs/rpick/workflows/Audit/badge.svg?branch=main)
+![CI](https://github.com/bowlofeggs/rpick/workflows/CI/badge.svg?branch=main)
 ![Release](https://github.com/bowlofeggs/rpick/workflows/Release/badge.svg)
 
 ```rpick``` is a command line tool that helps you to pick items from a list, using
@@ -315,7 +315,7 @@ cereal:
 
 # Changelog
 
-See the [Changelog](https://gitlab.com/bowlofeggs/rpick/blob/master/CHANGELOG.md).
+See the [Changelog](https://gitlab.com/bowlofeggs/rpick/blob/main/CHANGELOG.md).
 
 
 # Contribute
