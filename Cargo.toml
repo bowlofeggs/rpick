@@ -28,7 +28,7 @@ rand_distr = "0.5"
 serde = {version = "1.0", features = ["derive"]}
 serde_yaml = "0.9"
 statrs = "0.18"
-thiserror = "1"
+thiserror = "2"
 
 [dev-dependencies]
 approx = "0.5"
