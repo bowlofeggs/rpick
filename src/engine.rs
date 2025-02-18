@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! This module defines the Engine, the core of the rpick crate.
 use std::collections::BTreeMap;
 
-use rand::seq::SliceRandom;
+use rand::seq::IndexedRandom;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use statrs::distribution::ContinuousCDF;
@@ -46,7 +46,7 @@ where
     /// * `ui` - This is a struct that implements the [`ui::Ui`] trait. It is how rpick will
     ///     interact with the caller.
     pub fn new(ui: &'ui U) -> Engine<'ui, U> {
-        let rng = rand::thread_rng();
+        let rng = rand::rng();
 
         Engine {
             ui,
@@ -426,11 +426,6 @@ mod tests {
                 left.copy_from_slice(&chunk[..n]);
             }
         }
-
-        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand::Error> {
-            self.fill_bytes(dest);
-            Ok(())
-        }
     }
 
     mock! {
@@ -547,7 +542,7 @@ mod tests {
         let mut ui = MockUi::default();
         ui.expect_call_display_table().times(1).returning(|| false);
         ui.expect_prompt_choice()
-            .with(predicate::eq("that"))
+            .with(predicate::eq("the other"))
             .times(1)
             .returning(|_| true);
         let mut engine = Engine::new(&ui);
@@ -560,13 +555,13 @@ mod tests {
 
         let result = engine.pick_gaussian(&mut choices, 3.0);
 
-        assert_eq!(result, "that");
+        assert_eq!(result, "the other");
         assert_eq!(
             choices,
             vec![
                 String::from("this"),
+                String::from("that"),
                 String::from("the other"),
-                String::from("that")
             ]
         );
     }
@@ -585,7 +580,6 @@ mod tests {
         ui.expect_call_display_table().times(1).returning(|| true);
         ui.expect_display_table()
             .withf(|t| {
-                println!("{:?}", t);
                 let expected_table = ui::Table {
                     footer: vec![ui::Cell::Text("Total"), ui::Cell::Float(99.73)],
                     header: vec![ui::Cell::Text("Name"), ui::Cell::Text("Chance")],
@@ -596,11 +590,11 @@ mod tests {
                         },
                         ui::Row {
                             cells: vec![ui::Cell::Text("that"), ui::Cell::Float(27.181)],
-                            chosen: true,
+                            chosen: false,
                         },
                         ui::Row {
                             cells: vec![ui::Cell::Text("the other"), ui::Cell::Float(4.280)],
-                            chosen: false,
+                            chosen: true,
                         },
                     ],
                 };
@@ -609,7 +603,7 @@ mod tests {
             .times(1)
             .returning(|_| ());
         ui.expect_prompt_choice()
-            .with(predicate::eq("that"))
+            .with(predicate::eq("the other"))
             .times(1)
             .returning(|_| true);
         let mut engine = Engine::new(&ui);
@@ -622,13 +616,13 @@ mod tests {
 
         let result = engine.pick_gaussian(&mut choices, 3.0);
 
-        assert_eq!(result, "that");
+        assert_eq!(result, "the other");
         assert_eq!(
             choices,
             vec![
                 String::from("this"),
+                String::from("that"),
                 String::from("the other"),
-                String::from("that")
             ]
         );
     }

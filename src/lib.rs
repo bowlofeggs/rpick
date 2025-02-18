@@ -55,7 +55,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! // 32-bit architectures have different PRNG results than 64-bit architectures, so we will
 //! // only run this assertion on 64-bit systems.
 //! #[cfg(target_pointer_width = "64")]
-//! assert_eq!(choice, "that");
+//! assert_eq!(choice, "this");
 //! ```
 pub mod config;
 pub mod engine;
