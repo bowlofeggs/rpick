@@ -18,7 +18,7 @@
 /// functions that they all use.
 use std::io::{Read, Seek, Write};
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use regex::Regex;
 use tempfile::NamedTempFile;
 
@@ -92,7 +92,7 @@ fn test_rpick_with_config(
 //
 // Return stdout from rpick, so that tests can perform further assertions.
 fn test_rpick(args: &[&str], stdin: &str, expected_success: bool) -> String {
-    let mut rpick = Command::cargo_bin("rpick").unwrap();
+    let mut rpick = cargo_bin_cmd!("rpick");
 
     let mut assert = rpick.args(args).write_stdin(stdin).assert();
 
