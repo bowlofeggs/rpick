@@ -33,6 +33,6 @@ thiserror = "2"
 [dev-dependencies]
 approx = "0.5"
 assert_cmd = "2"
-mockall = "0.13"
+mockall = "0.14"
 regex = "1"
 tempfile = "3"
