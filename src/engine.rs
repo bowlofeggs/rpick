@@ -15,8 +15,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 //! This module defines the Engine, the core of the rpick crate.
 use std::collections::BTreeMap;
 
-use rand::seq::IndexedRandom;
 use rand::Rng;
+use rand::seq::IndexedRandom;
 use rand_distr::{Distribution, Normal};
 use statrs::distribution::ContinuousCDF;
 use thiserror::Error;
