@@ -31,7 +31,7 @@ jobs:
             flags: "--release"
         rust_version:
           - name: msrv
-            version: "1.74"
+            version: "1.95"
           - name: stable
             version: stable
     steps:
@@ -77,7 +77,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: "1.74"
+          toolchain: "1.95"
           override: true
           components: "clippy"
       - name: Run cargo clippy
@@ -128,7 +128,7 @@ jobs:
             flags: "--release"
         rust_version:
           - name: msrv
-            version: "1.74"
+            version: "1.95"
           - name: stable
             version: stable
     steps:
