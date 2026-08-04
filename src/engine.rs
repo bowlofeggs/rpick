@@ -29,7 +29,7 @@ use crate::{config, ui};
 ///
 /// * `ui` - This is a struct that implements the [`ui::Ui`] trait.
 /// * `rng` - This must be a random number generator that implements the [`rand::RngCore`]
-///           trait.
+///   trait.
 pub struct Engine<'ui, U> {
     ui: &'ui U,
     rng: Box<dyn rand::RngCore>,
@@ -44,7 +44,7 @@ where
     /// # Arguments
     ///
     /// * `ui` - This is a struct that implements the [`ui::Ui`] trait. It is how rpick will
-    ///     interact with the caller.
+    ///   interact with the caller.
     pub fn new(ui: &'ui U) -> Engine<'ui, U> {
         let rng = rand::rng();
 
@@ -59,7 +59,7 @@ where
     /// # Arguments
     ///
     /// * `config` - A mapping of category names to [`config::ConfigCategory`] objects, which
-    ///     contain the parameters which should be used for the pick.
+    ///   contain the parameters which should be used for the pick.
     /// * `category` - The category you wish to choose from.
     ///
     /// # Returns
