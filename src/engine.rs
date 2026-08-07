@@ -32,7 +32,7 @@ use crate::{config, ui};
 ///   trait.
 pub struct Engine<'ui, U> {
     ui: &'ui U,
-    rng: Box<dyn rand::RngCore>,
+    rng: Box<dyn rand::Rng>,
 }
 
 impl<'a, 'ui, U> Engine<'ui, U>
@@ -390,6 +390,8 @@ pub enum PickError<'e> {
 
 #[cfg(test)]
 mod tests {
+    use std::convert::Infallible;
+
     use approx::abs_diff_eq;
     use mockall::{mock, predicate};
     use rand::SeedableRng;
@@ -402,18 +404,21 @@ mod tests {
     /// on both 32-bit and 64-bit architectures. This is used for all tests except for the Gaussian
     /// tests, since those do behave differently between 32-bit and 64-bit systems when using this
     /// rng.
-    impl rand::RngCore for FakeRng {
-        fn next_u32(&mut self) -> u32 {
+    impl rand::TryRng for FakeRng {
+        type Error = Infallible;
+
+        fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
             self.0 += 1;
-            self.0 - 1
+
+            Ok(self.0 - 1)
         }
 
-        fn next_u64(&mut self) -> u64 {
-            self.next_u32() as u64
+        fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+            self.try_next_u32().map(|v| v as u64)
         }
 
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            let mut left = dest;
+        fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Self::Error> {
+            let mut left = dst;
             while left.len() >= 4 {
                 let (l, r) = { left }.split_at_mut(4);
                 left = r;
@@ -425,6 +430,8 @@ mod tests {
                 let chunk: [u8; 4] = self.next_u32().to_le_bytes();
                 left.copy_from_slice(&chunk[..n]);
             }
+
+            Ok(())
         }
     }
 
